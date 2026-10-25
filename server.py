@@ -251,6 +251,8 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(body, dict):
                 raise safety.SafetyError("Send a JSON object.")
             client = self.client_address[0]
+            if os.getenv("TRUST_PROXY") == "1":  # behind a host's proxy: rate-limit the real visitor
+                client = (self.headers.get("X-Forwarded-For") or client).split(",")[0].strip()
             if uses_ai:
                 if not LIMITER.allow(client):
                     raise safety.SafetyError("Too many requests. Wait a minute and try again.", 429)
@@ -282,7 +284,8 @@ def make_server(host="127.0.0.1", port=8000):
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
-    srv = make_server("127.0.0.1", port)
+    host = os.getenv("HOST", "127.0.0.1")  # hosting sets HOST=0.0.0.0; locally only this computer can connect
+    srv = make_server(host, port)
     print(f"Hearing Hub running at http://localhost:{port}  ({llm.model_label()})")
     if not llm.has_key():
         print("Note: no API key found. The audiogram preview works, but AI features need a key in .env.")

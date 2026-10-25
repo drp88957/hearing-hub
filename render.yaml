@@ -1,0 +1,22 @@
+# One-click deploy on Render (render.com): New > Blueprint > pick this repo, paste PORTKEY_API_KEY.
+services:
+  - type: web
+    name: hearing-hub
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    healthCheckPath: /api/config
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: HOST
+        value: 0.0.0.0
+      - key: TRUST_PROXY
+        value: "1"
+      - key: HUB_TOKEN_BUDGET
+        value: "300000"
+      - key: HUB_REQ_PER_MIN
+        value: "10"
+      - key: PORTKEY_API_KEY
+        sync: false
