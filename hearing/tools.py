@@ -122,7 +122,7 @@ def _configuration(ear):
 
 # Type of loss, from the gap between air- and bone-conduction thresholds.
 LOSS_TYPE_NOTES = {
-    "conductive": "Sound is blocked on its way to a healthy inner ear. Speech is too quiet rather than "
+    "conductive": "Sound is blocked on its way to a working inner ear. Speech is too quiet rather than "
                   "distorted, so once it is loud enough (closer, louder, or through a bone-conduction "
                   "device) it is usually clear.",
     "sensorineural": "The inner ear or hearing nerve is affected. Even when speech is loud enough, some "
@@ -181,10 +181,15 @@ def _device_notes(device, side, ear_info):
                          "skipping the outer and middle ear.")
     if side in ("right", "left"):
         other = "left" if side == "right" else "right"
-        notes.append(f"Hearing comes mostly from the {side} side. Voices on the {other} side are quieter "
-                     f"because the head blocks them, so it helps when people sit or walk on the {side}.")
-        notes.append("With hearing on one side it is hard to tell where a sound is coming from, and "
-                     "background noise is harder to listen through.")
+        notes.append(f"The device's microphone is on the {side}, so voices from the {other} are quieter: the head "
+                     f"blocks some sound before it reaches the microphone. It helps when people sit or walk on "
+                     f"the {side}.")
+        if device.startswith("bone_conduction"):
+            notes.append("Bone-conducted sound reaches both inner ears, but with one microphone it is hard to tell "
+                         "where a sound is coming from, and background noise is harder to listen through.")
+        else:
+            notes.append("With a device on one side it is hard to tell where a sound is coming from, and "
+                         "background noise is harder to listen through.")
     return notes
 
 
@@ -435,7 +440,7 @@ FEATURES = {
     "booth_or_corner_seating": (-1.0, "noise", "A corner or booth cuts noise from behind you."),
     "quiet_room": (-2.0, "noise", "A quiet room helps a lot."),
     "small_group": (-1.0, "noise", "Small groups are easier to follow."),
-    "hearing_loop": (-2.0, "access", "A hearing loop sends sound straight to hearing aids."),
+    "hearing_loop": (-2.0, "access", "A hearing loop sends sound straight to hearing aids and implants that have a telecoil (T-setting)."),
     "captioning_available": (-2.0, "access", "Captions are available."),
     "good_face_lighting": (-1.0, "light", "Faces are well lit, which helps with lipreading."),
 }
@@ -486,7 +491,7 @@ RELAY = [
             "Businesses are expected to accept relay calls."},
     {"name": "IP Captioned Telephone (IP CTS)",
      "how": "Shows captions of what the other person says during a call. "
-            "Setup usually needs a certification from a hearing health professional. Check current rules."},
+            "It is free for people with hearing loss in the US; you register with a provider. Check current rules."},
     {"name": "Video Relay Service (VRS)",
      "how": "For ASL users: a sign language interpreter on video relays the call."},
 ]

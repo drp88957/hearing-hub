@@ -212,9 +212,16 @@ details.run td,details.run th{padding:.15rem .8rem .15rem 0;text-align:left}
 #you-fig.joined .glow{opacity:1}
 
 /* ---------- news ---------- */
-.news-grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));margin-top:1rem}
-.news-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:1rem 1.1rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.45rem}
+.news-grid{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));align-items:stretch;margin-top:1rem}
+.news-card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.news-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -14px rgba(76,52,190,.35)}
+.news-art{display:block;width:100%;height:132px;flex:none}
+.news-card.wide{grid-column:1/-1;flex-direction:row}
+.news-card.wide .news-art{width:38%;height:auto;min-height:180px;background:linear-gradient(135deg,#100B2B,#2A1B6E)}
+@media(max-width:700px){.news-card.wide{flex-direction:column}.news-card.wide .news-art{width:100%;height:132px;min-height:0}}
+.news-body{display:flex;flex-direction:column;gap:.45rem;padding:.9rem 1.1rem 1rem;flex:1}
 .news-card.mine{border:2px solid transparent;background:linear-gradient(#fff,#fff) padding-box,var(--wave) border-box}
+.news-card h3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .news-card h3{font-size:1.05rem;line-height:1.3;margin:0}
 .news-meta{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;font-size:.78rem}
 .news-meta .chip-tag{background:#F3EFFE;color:var(--violet);border-radius:999px;padding:.1rem .6rem;font-weight:700}
@@ -414,7 +421,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
           <button type="button" class="l" id="ear-left" aria-pressed="false">Left ear</button>
         </div>
         <table class="grid" id="grid"></table>
-        <p class="field-hint" style="margin:-.4rem 0 .5rem">Bone rows (the &lt; &gt; or [ ] marks) are optional. They show if your loss is conductive.</p>
+        <p class="field-hint" style="margin:-.4rem 0 .5rem"><b>R bone / L bone:</b> the same test with a small vibrator behind the ear, which skips the ear canal. Optional; if these are much better than the air numbers, the loss is conductive.</p>
         <div class="presets" role="group" aria-label="Example audiograms">
           <span class="field-hint">Examples:</span>
           <button type="button" class="btn ghost small" data-preset="conductive" title="Real audiogram: bilateral atresia">Conductive (real)</button>
@@ -729,7 +736,8 @@ window.addEventListener('pointerup',()=>{dragging=false;});
 function buildGrid(){
   let h='<tr><th></th>'+FREQS.map(f=>`<th scope="col">${FREQ_LABEL[f]}</th>`).join('')+'</tr>';
   [['right','Right','r',''],['left','Left','l',''],['right_bc','R bone','r','bone'],['left_bc','L bone','l','bone']].forEach(([ear,label,c,kind])=>{
-    h+=`<tr class="${c} ${kind}"><th scope="row" class="rowlabel ${c}">${label}</th>`+FREQS.map(f=>
+    const tip=kind?` title="${label==='R bone'?'Right':'Left'} ear tested with a vibrator behind the ear, skipping the ear canal and middle ear"`:'';
+    h+=`<tr class="${c} ${kind}"><th scope="row" class="rowlabel ${c}"${tip}>${label}</th>`+FREQS.map(f=>
       kind&&!BC_FREQS.includes(f)?'<td></td>':
       `<td><input type="number" inputmode="numeric" min="-10" max="120" step="5" data-ear="${ear}" data-f="${f}" aria-label="${label}${kind?' conduction':' ear'}, ${f} hertz, dB"></td>`).join('')+'</tr>';
   });
@@ -787,7 +795,7 @@ function renderSummary(msg){
   let h=earLine(a);
   if(a.asymmetry)h+=`<p>${esc(a.asymmetry)}</p>`;
   h+=a.missed_sounds.length?`<p>Likely missed without amplification: <b>${a.missed_sounds.map(esc).join(', ')}</b></p>`:'<p>No speech sounds are predicted to be missed at conversation level.</p>';
-  h+=`<p class="field-hint">Estimates from your unaided numbers. Not a diagnosis.</p>`;
+  h+=`<p class="field-hint">Average = 0.5 to 4 kHz. Degree uses the common ASHA scale (56 to 70 dB = moderately severe); some clinics call the same numbers "moderate". Estimates from unaided numbers, not a diagnosis.</p>`;
   const notes=[...(a.loss_type_notes||[]),...((a.device&&a.device.notes)||[])];
   $('#summary-notes').innerHTML=notes.length?`<h3>What this means for you</h3><ul class="notes">${notes.map(n=>'<li>'+esc(n)+'</li>').join('')}</ul>`:'';
   $('#summary-notes').classList.toggle('hidden',!notes.length);
@@ -875,7 +883,7 @@ const EXAMPLE_REPORT={
   loss_description:'Bilateral moderate conductive hearing loss, about 60-70 dB (hospital audiogram and medical certificate, 2015).',
   facts:['Born with bilateral anotia and atresia: no outer ears and no ear canals. The inner ear works, but sound cannot get in.',
     'MED-EL Bonebridge bone-conduction implant on the left side since 2015 (the first in Gujarat and the third in India).',
-    'Before the implant: a CROS hearing aid. Regular hearing aids were uncomfortable and did not work well in noise.',
+    'Before the implant: a bone-vibrator hearing headband and a BAHA trial. Hearing aids were uncomfortable and did not work well in noise.',
     'Still hard: noisy places, unfamiliar accents and phone calls.',
     'Connecting the hearing device to a phone takes 20-30 seconds, so incoming calls often drop before they can be answered.'],
   check_these:[],files:["Deep's audiogram, 30 Apr 2015 (photo)","Medical certificate, 7 Jul 2015 (photo)"]
@@ -1156,22 +1164,68 @@ $('#place-go').addEventListener('click',()=>guarded($('#place-go'),$('#place-out
 
 /* ---------- what's new ---------- */
 let newsLoaded=false;
+// Topic illustrations drawn in SVG (no press photos: those are copyrighted and hotlinks break).
+const ART_STROKE='stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+function waves(x,y,dir,n){let g='';for(let i=1;i<=(n||3);i++){const r=10+i*11;g+=`<path d="M${x} ${y-r} a${r} ${r} 0 0 ${dir>0?1:0} 0 ${2*r}" stroke="url(#na-w)" stroke-width="3" fill="none" opacity="${1.1-i*.25}"/>`;}return g;}
+const NEWS_ART={
+  'Cochlear implants':()=>`<path d="M138 98c-24 0-36-20-36-42 0-26 20-44 44-44s42 18 42 40c0 22-18 26-18 40 0 12-8 22-22 22" ${ART_STROKE}/><path d="M156 56a12 12 0 0 0-24 0v6a9 9 0 1 1 0 18" ${ART_STROKE}/>
+    <circle cx="214" cy="44" r="16" fill="#2EE6C8" fill-opacity=".25" stroke="#2EE6C8" stroke-width="3"/><circle cx="214" cy="44" r="5" fill="#2EE6C8"/>
+    <path d="M196 54c-12 8-20 14-30 14" stroke="#2EE6C8" stroke-width="2.5" fill="none" stroke-dasharray="4 4"/><text x="326" y="98" text-anchor="end" fill="#CFC6F5" font-size="11" font-family="Space Grotesk">all under the skin</text>`,
+  'Gene therapy':()=>{let g='';for(let i=0;i<=12;i++){const x=70+i*17,a=Math.sin(i*.6)*26;g+=`<line x1="${x}" y1="${66-a}" x2="${x}" y2="${66+a}" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>`;}
+    return g+`<path d="${Array.from({length:49},(_,i)=>(i?'L':'M')+(70+i*4.25)+' '+(66-Math.sin(i*.15)*26)).join(' ')}" stroke="#2EE6C8" stroke-width="3.5" fill="none"/>
+    <path d="${Array.from({length:49},(_,i)=>(i?'L':'M')+(70+i*4.25)+' '+(66+Math.sin(i*.15)*26)).join(' ')}" stroke="#FF7A59" stroke-width="3.5" fill="none"/>
+    <circle cx="305" cy="40" r="6" fill="#FFB547"/><text x="326" y="104" text-anchor="end" fill="#CFC6F5" font-size="11" font-family="Space Grotesk">OTOF</text>`;},
+  'Bone conduction':()=>`<path d="M118 112v-18c-16-6-24-20-24-38 0-28 22-46 50-46 30 0 50 20 50 46 0 10-2 16 4 24l-10 4v12c0 8-8 12-18 10l-12-2v8" ${ART_STROKE}/>
+    <circle cx="176" cy="54" r="9" fill="#FF7A59"/>${waves(190,54,1,3)}<path d="M176 54c-8 2-14 6-18 10" stroke="#FFB547" stroke-width="2.5" fill="none" stroke-dasharray="3 4"/>
+    <text x="326" y="104" text-anchor="end" fill="#CFC6F5" font-size="11" font-family="Space Grotesk">sound through bone</text>`,
+  'Hearing aids':()=>`<path d="M150 26c22 0 34 14 34 32 0 20-14 30-28 30h-6c-8 0-12-6-12-14V44c0-10 4-18 12-18z" ${ART_STROKE}/><path d="M146 88c0 14-8 22-20 22" ${ART_STROKE}/><circle cx="126" cy="112" r="4" fill="#fff"/>
+    <path d="M222 30l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#FFB547"/><path d="M246 64l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5z" fill="#2EE6C8"/><text x="326" y="104" text-anchor="end" fill="#CFC6F5" font-size="11" font-family="Space Grotesk">speech vs noise</text>`,
+  'Hearing glasses':()=>`<rect x="100" y="48" width="56" height="38" rx="16" ${ART_STROKE}/><rect x="176" y="48" width="56" height="38" rx="16" ${ART_STROKE}/><path d="M156 62c6-6 14-6 20 0M100 58H78M232 58h22" ${ART_STROKE}/>
+    ${waves(74,58,-1,2)}${waves(258,58,1,2)}<circle cx="86" cy="58" r="3.5" fill="#FFB547"/><circle cx="246" cy="58" r="3.5" fill="#FFB547"/>`,
+  'Earbuds':()=>`<path d="M150 40a22 22 0 1 1 22 30v34a8 8 0 0 1-16 0V78" ${ART_STROKE}/><circle cx="172" cy="48" r="7" fill="#2EE6C8"/>${waves(200,48,1,3)}<text x="326" y="104" text-anchor="end" fill="#CFC6F5" font-size="11" font-family="Space Grotesk">hearing test in the app</text>`,
+  'study':()=>`<path d="M96 104h150" ${ART_STROKE}/>${[[110,40],[136,58],[162,30],[188,70],[214,50]].map(([x,h],i)=>`<rect x="${x}" y="${104-h}" width="18" height="${h}" rx="4" fill="${['#2EE6C8','#8B5CF6','#FF7A59','#2EE6C8','#FFB547'][i]}" opacity=".9"/>`).join('')}
+    <text x="326" y="104" text-anchor="end" fill="#CFC6F5" font-size="11" font-family="Space Grotesk">355 patients</text>`,
+  'New':()=>`<rect x="110" y="26" width="110" height="80" rx="10" ${ART_STROKE}/><path d="M124 46h82M124 62h82M124 78h54" stroke="#fff" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>
+    <path d="M246 34l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#FFB547"/><text x="326" y="104" text-anchor="end" fill="#CFC6F5" font-size="11" font-family="Space Grotesk">live web search</text>`
+};
+let artId=0;
+function newsArt(tag,itemId){
+  const draw=NEWS_ART[itemId==='bonebridge-355'?'study':tag]||NEWS_ART.New,id='na'+(artId++);
+  // ids are made unique per card so gradients do not clash
+  return `<svg class="news-art" viewBox="0 0 340 132" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><linearGradient id="${id}-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#100B2B"/><stop offset="1" stop-color="#2A1B6E"/></linearGradient>
+    <radialGradient id="${id}-glow" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#8B5CF6" stop-opacity=".45"/><stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/></radialGradient>
+    <linearGradient id="na-w" x1="0" x2="1"><stop offset="0" stop-color="#2EE6C8"/><stop offset=".5" stop-color="#8B5CF6"/><stop offset="1" stop-color="#FF7A59"/></linearGradient></defs>
+    <rect width="340" height="132" fill="url(#${id}-bg)"/><ellipse cx="170" cy="66" rx="150" ry="70" fill="url(#${id}-glow)"/>
+    ${[[24,20],[300,18],[318,96],[40,110],[270,40]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="1.3" fill="#fff" opacity=".6"/>`).join('')}
+    ${draw()}</svg>`;
+}
 function newsCard(it){
   const dev=$('#device').value,mine=(it.for_devices||[]).includes(dev)&&dev!=='none';
   const src=(it.sources||[]).filter(([n,u])=>/^https:\/\//.test(u)).map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(' · ');
-  return `<article class="news-card${mine?' mine':''}">
+  return `<article class="news-card${mine?' mine':''}">${newsArt(it.tag,it.id)}<div class="news-body">
     <div class="news-meta"><span class="chip-tag${it.tag==='New'?' new':''}">${esc(it.tag)}</span>${mine?'<span class="chip-tag you">For you</span>':''}${it.trusted===false?'<span class="field-hint">less-known source</span>':''}<time>${esc(it.date)}</time></div>
     <h3>${esc(it.title)}</h3>
     <p>${esc(it.summary)}</p>
     <p class="why"><b>Why it matters:</b> ${esc(it.why)}</p>
     ${it.caveat?`<p class="caveat"><b>Good to know:</b> ${esc(it.caveat)}</p>`:''}
-    <p class="src">Sources: ${src}</p></article>`;
+    <p class="src">Sources: ${src}</p></div></article>`;
 }
 function renderNews(items){
   const dev=$('#device').value;
   const sorted=[...items].sort((a,b)=>((b.for_devices||[]).includes(dev)&&dev!=='none')-((a.for_devices||[]).includes(dev)&&dev!=='none'));
   $('#news-grid').innerHTML=sorted.map(newsCard).join('');
+  balanceGrid($('#news-grid'));
 }
+function balanceGrid(grid){
+  // if the last row would hold a single card, let it span the row instead of leaving a gap
+  const cards=[...grid.children];
+  cards.forEach(c=>{c.classList.remove('wide');const a=c.querySelector('.news-art');if(a)a.setAttribute('preserveAspectRatio','xMidYMid slice');});
+  const cols=getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+  if(cols>1&&cards.length%cols===1){const last=cards[cards.length-1];last.classList.add('wide');
+    const a=last.querySelector('.news-art');if(a)a.setAttribute('preserveAspectRatio','xMidYMid meet');}
+}
+window.addEventListener('resize',()=>{const g=$('#news-grid');if(g&&g.children.length)balanceGrid(g);});
 async function loadNews(){
   if(newsLoaded)return;newsLoaded=true;
   try{const r=await fetch('/api/news');const j=await r.json();renderNews(j.items||[]);

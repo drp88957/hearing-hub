@@ -123,6 +123,8 @@ class LossTypeTests(unittest.TestCase):
         notes = " ".join(a["device"]["notes"])
         self.assertIn("clear, not just louder", notes)  # conductive ear + bone conduction
         self.assertIn("sit or walk on the left", notes)
+        self.assertIn("microphone is on the left", notes)
+        self.assertIn("reaches both inner ears", notes)
         self.assertIn("bone-conduction implant on the left side", tools.profile_summary(a))
 
     def test_bad_device_is_ignored(self):
