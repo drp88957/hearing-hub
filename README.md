@@ -5,61 +5,80 @@ what happens *around* conversations, where people get stuck.
 
 | Tool | What it does |
 |---|---|
-| **My hearing** | **Start here:** upload your hearing report and related pictures (PNG, JPG, WebP, PDF, DOC, DOCX, PPT, PPTX, TXT; several at once). A report-reader agent fills in your numbers, device and key facts, which the other two tools then use. Or draw your audiogram (air and, optionally, bone conduction) and pick your device and its side. A free-text box lets you add facts in your own words (for example "Bonebridge only on my left ear"); every tool and the share card use them. The app tells conductive, sensorineural and mixed loss apart, shows which speech sounds you likely catch, then writes a plain-language "how I hear" card you can share with teachers, coworkers and family. |
-| **Phone calls** | Say what you need to get done. You get a written-route plan, a message ready to send, a backup call script with likely questions, and a follow-up email that puts the answer in writing. |
+| **My hearing** | **Start here:** upload your hearing report and related pictures (PNG, JPG, WebP, PDF, DOC, DOCX, PPT, PPTX, TXT; several at once). A report-reader agent fills in your numbers, device and key facts, which the other tools then use. Or draw your audiogram (air and, optionally, bone conduction) and pick your device and its side. A free-text box lets you add facts in your own words (for example "Bonebridge only on my left ear"); every tool and the share card use them. The app tells conductive, sensorineural and mixed loss apart, shows which speech sounds you likely catch, then writes a plain-language **share card** ("how I hear") for professors, coworkers, family and doctors. |
+| **Phone calls** | Say what you need to get done. For every organization you name, the app finds its official website, written channels, email and phone, and checks them on the organization's own site. You get a written-route plan, a message ready to send, a backup call script with likely questions, and a follow-up email that puts the answer in writing. |
 | **Places** | Add a photo, a description or pasted reviews of a restaurant, classroom or meeting room. You get a 1-10 listening-effort score, the best seat, and what to ask the venue. |
 | **The circle** | Group conversations ("dinner table syndrome"). List who will be there, with notes like "soft voice" or "talks most". Code works out who sits where (people you most need on your hearing side or across where you can see their face, noise behind you) and draws the seating map; the agent writes a friendly message to the group, lines to catch up without stopping the talk, and a follow-up. |
 | **What's new** | Recent hearing-tech news (fully implantable cochlear implants, OTOF gene therapy, bone-conduction processors, AI hearing aids, hearing glasses), each with sources, why it matters and its limits. Stories that fit your device are marked "For you". A hand-checked list costs no tokens; **Search for newer news** runs a live web search and keeps only stories whose link the search really opened (cached 24 hours). |
 
-## Run it (about 2 minutes)
+## Run it (about 3 minutes, tested from a fresh clone)
 
-You need Python 3.9+ and one package, the OpenAI Python SDK (AI calls go through Portkey with it).
+You need **Python 3.9 or newer**. Two packages are installed from `requirements.txt`: the OpenAI Python SDK
+(AI calls go through Portkey) and PyMuPDF (reads PDF reports).
 
 ```bash
 git clone <this repo>
 cd hearing-hub
+python -m venv .venv                     # optional but recommended
+# Windows:  .venv\Scripts\activate      macOS/Linux:  source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # then paste a key into .env
 python server.py
 ```
 
 Open **http://localhost:8000**.
 
-**API keys:** put `PORTKEY_API_KEY` (course key, model `gpt-6-luna`) or `OPENAI_API_KEY` in `.env`.
-The app looks for `.env` in this folder first, then in the folder one level above it.
-`.env.example` lists every setting. Without a key the audiogram chart still works; the AI tools show a clear message.
+**API keys:** the app reads `PORTKEY_API_KEY` (course key, model `gpt-6-luna`) or `OPENAI_API_KEY`.
+It looks for `.env` **in this folder first, then in the folder one level above it**, so a shared `.env` next to the
+cloned repo works with no copying. To use your own, `cp .env.example .env` and paste a key.
+`.env.example` lists every setting; all except the key are optional. Without a key the audiogram chart and the
+news list still work, and the AI tools show a clear message.
 
-**Quick demo path (for graders):**
-1. Open *My hearing*. Upload an audiogram photo or PDF in **Step 1** and press **Read my report** (or keep the example audiogram), then press **Write my "how I hear" card**.
-2. Open *Phone calls*, press **Fill in an example**, then **Plan my call**.
-3. Open *Places*, press **Load sample reviews (one has a hidden attack)**, then **Check this place**.
-   The "Safety filter" banner shows the hidden attack being removed before the AI sees it.
+Tested on 2026-10-25: fresh clone into a folder with the `.env` one level up, new virtual environment,
+`pip install`, all 79 tests and every tool live on `gpt-6-luna`. Setup took under 3 minutes.
 
-Under every result, **How this was made** shows the tool calls, tokens (input, cached, output) and time.
+**Quick demo path (for graders, about 5 minutes):**
+1. **My hearing.** In **Step 1** press **Fill in an example (Deep's real report)**. It loads the real audiogram of
+   the app's author (bilateral atresia, a Bonebridge implant on the left). Or upload your own audiogram photo or PDF
+   and press **Read my report**. Then press **Make my share card**.
+2. **Phone calls.** Press **Fill in an example** (a real case: a Yale Pharmacy appointment by phone), then
+   **Plan my call**. The "Where to reach them in writing" card shows checked contacts. Try naming any company, for
+   example "Starkey, Signia and MED-EL": each gets its own verified card (about 15 seconds per new organization).
+3. **Places.** Press **Load sample reviews (one has a hidden attack)**, then **Check this place**. The
+   "Safety filter" banner shows the attack being removed before the AI sees it.
+4. **The circle.** Press **Fill in an example**, then **Plan my seat** for a seating map of a family dinner.
+5. **What's new.** Recent hearing tech with sources. **Search for newer news** runs a live web search.
+
+Watch the campfire at the top: the "You" figure walks into the circle as each tool is used. Under every result,
+**How this was made** shows the tool calls, tokens (input, cached, output) and time.
 
 ## How it works
 
 ```
-                      +----------------+
- "I have to call      |  Router agent  |  picks a specialist (no tools, ~150 output tokens)
-  my dentist"  -----> +-------+--------+
-                              |
-        +---------------------+----------------------+
-        v                     v                      v
- Profile agent           Call agent             Place agent
- tool: analyze_audiogram  tool: find_call_       tool: score_acoustics
- (reads verified numbers)      alternatives      (+ optional photo input)
+                          +----------------+
+ "I have to call     ---> |  Router agent  |  picks a tool (no tools itself, ~400 tokens)
+  my pharmacy"            +-------+--------+
+                                  |
+     +-------------+--------------+--------------+---------------+
+     v             v              v              v               v
+ Report reader  Profile agent  Call agent     Place agent     Circle agent
+ (vision:       tool:          tool:          tool:           tool:
+  photos, PDF,  analyze_       find_call_     score_          plan_seating
+  Word, PPT)    audiogram      alternatives   acoustics
+     |                         + web search -> verify contacts on the official site
+     v
+ numbers checked in code -> the other tools use them        News: hand-checked list + verified live search
 ```
 
 Design choices worth knowing:
 
-* **Tools are plain code, not model guesses.** Audiogram analysis, the 1-10 acoustics score and the
-  call-alternatives lookup are deterministic Python (`hearing/tools.py`).
-* **The model cannot change your numbers.** The profile tool is bound to your validated input, so the model
-  calls it with no arguments.
-* **The score is never invented.** In *Places*, only features the model backed with evidence count, and the app
-  computes the score from exactly those. If the model skips the tool or counts unsupported features, the app
-  corrects it and records that in the run trace.
+* **Tools are plain code, not model guesses.** Audiogram analysis (including conductive vs sensorineural loss),
+  the 1-10 acoustics score, the seating plan and the contact checks are deterministic Python.
+* **The model cannot change your numbers.** Tools are bound to the validated input, so the model calls them with
+  no arguments. Numbers read from a report are range-checked in code before they are used.
+* **The score and the seats are never invented.** Only features the model backed with evidence count in
+  *Places*, and *The circle* seats people in code; the AI only writes the messages.
+* **Contacts are verified, not generated.** A web search proposes contacts; code keeps only those found on the
+  organization's own site, and replaces any other email the model writes.
 * **The chart costs zero tokens.** Live speech-sound analysis runs in code.
 
 ## Safety
@@ -86,8 +105,10 @@ Design choices worth knowing:
 python -m unittest discover -s tests -t .
 ```
 
-37 tests cover the audiogram math, scoring, injection defenses, budget and rate limits, and an end-to-end run of
-the real server against a **fake model** (`tests/fake_llm.py`) to check the tool loop, safety layer and fallbacks.
+79 tests cover the audiogram math (including loss type), scoring, seating, report reading in every file
+format, contact and news verification, injection defenses, budget and rate limits, and end-to-end runs of the real
+server against a **fake model** (`tests/fake_llm.py`) that deliberately misbehaves (misread reports, invented
+emails, hidden instructions) to prove the guards catch it.
 The fake model is only for testing the plumbing. It produces canned text, not real answers.
 
 ## Limits (honest)
@@ -96,17 +117,23 @@ The fake model is only for testing the plumbing. It produces canned text, not re
 * The call tool lists US relay services (711, IP CTS, VRS). Verify availability for your location.
 * Photo analysis depends on whether the model accepts images; if not, the app says so and uses text only.
 * The 1-10 score is a transparent heuristic, not a measurement. Validate it against places you know.
+* Reading a phone photo of a paper audiogram is close but not exact (within 5-10 dB in testing), so the app always
+  asks the person to compare the numbers with the original.
+* A new organization lookup takes about 15 seconds and ~15k tokens; results are cached for 7 days.
+* Older .doc and .ppt files give text only; save them as PDF or DOCX for pictures.
 
 ## Layout
 
 ```
-server.py            HTTP server and API (standard library only)
-hearing/tools.py     deterministic tools
-hearing/agents.py    router + three agents, tool loop, JSON checks
-hearing/safety.py    injection defense, budget, rate limit
-hearing/llm.py       API client, token accounting, .env loading
-hearing/contacts.py  finds an organization's official contacts by web search and verifies them on its own site
-hearing/documents.py reads uploaded PDF, Word, PowerPoint, text and picture files (no AI)
-static/index.html    the whole UI
-tests/               unit tests, fake model, end-to-end tests
+server.py             HTTP server and API (standard library only)
+hearing/tools.py      deterministic tools: audiogram, loss type, acoustics score, seating, call routes, contacts list
+hearing/agents.py     router + report, profile, call, place and circle agents; tool loop; JSON and guard checks
+hearing/documents.py  reads uploaded PDF, Word, PowerPoint, text and picture files (no AI)
+hearing/contacts.py   finds an organization's official contacts by web search and verifies them on its own site
+hearing/news.py       hand-checked hearing-tech news + verified live search
+hearing/safety.py     injection defense, personal-data stripping, budget, rate limit
+hearing/llm.py        API client (OpenAI SDK via Portkey), token accounting, .env loading
+static/index.html     the whole UI
+static/examples/      the example audiogram (personal details cropped out)
+tests/                unit tests, a fake model, end-to-end tests
 ```
