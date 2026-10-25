@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hearing Hub</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23100B2B'/%3E%3Cellipse cx='32' cy='50' rx='22' ry='6' fill='%23FFB547' fill-opacity='.25'/%3E%3Crect x='14' y='46' width='36' height='6' rx='3' fill='%237D4A35' transform='rotate(10 32 49)'/%3E%3Crect x='14' y='46' width='36' height='6' rx='3' fill='%236B3E2E' transform='rotate(-10 32 49)'/%3E%3Cpath d='M32 47c-14-4-12-20 0-36 12 16 14 32 0 36z' fill='%23FF7A59'/%3E%3Cpath d='M32 47c-7-2-6-11 0-19 6 8 7 17 0 19z' fill='%23FFE29A'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -298,16 +299,54 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
 .foot{max-width:1180px;margin:0 auto;padding:0 1.25rem 2rem;color:var(--ink-2);font-size:.85rem;display:flex;gap:.6rem;align-items:center}
 .foot svg{flex:none}
 
+/* ---------- step tracker ---------- */
+.steps{list-style:none;display:flex;flex-wrap:wrap;gap:.5rem;padding:0;margin:0 0 1rem;counter-reset:none}
+.steps li{flex:1 1 180px;display:flex;align-items:center;gap:.6rem;background:#fff;border:1px solid var(--line);border-radius:14px;padding:.55rem .8rem;cursor:pointer;position:relative;box-shadow:var(--shadow)}
+.steps li .n{flex:none;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;font-weight:700;background:#F3EFFE;color:var(--violet)}
+.steps li b{display:block;font-family:var(--display)}
+.steps li small{color:var(--ink-2)}
+.steps li.done .n{background:var(--wave);color:#fff}
+.steps li.done{border-color:#BFE9DE}
+.steps li:not(:last-child)::after{content:"";position:absolute;right:-.45rem;top:50%;width:.4rem;height:2px;background:var(--line)}
+/* ---------- places gauge ---------- */
+.gauge-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.2rem}
+.gauge{width:230px;height:auto;flex:none}
+.gauge-wrap .score{flex-direction:column;align-items:flex-start;gap:.2rem}
+/* ---------- call flow strip ---------- */
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:.4rem;margin:.6rem 0 .4rem}
+.flow .fs{flex:1 1 170px;display:flex;gap:.6rem;align-items:center;background:#FAF8FF;border:1px solid var(--line);border-radius:14px;padding:.55rem .75rem}
+.flow .fs svg{flex:none}
+.flow .fs b{display:block;font-size:.95rem}
+.flow .fs small{color:var(--ink-2);font-size:.8rem}
+.flow .arr{align-self:center;color:#B9AEE6;font-weight:700}
+.flow .fs.backup{border-style:dashed;opacity:.85}
+/* ---------- empty states ---------- */
+.empty{display:flex;align-items:center;gap:1rem;color:var(--ink-2);border:1px dashed var(--line);border-radius:18px;padding:1rem 1.2rem;margin-top:1.2rem;background:rgba(255,255,255,.6)}
+.empty p{margin:0}
+/* ---------- news filters ---------- */
+.filters{display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0 0}
+.filters button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:.3rem .8rem;font-size:.85rem;font-weight:700;color:var(--ink-2);cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--violet);border-color:var(--violet);color:#fff}
+/* ---------- share card ---------- */
+.card-head{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem 1rem;background:linear-gradient(135deg,#100B2B,#2A1B6E);color:#fff;border-radius:16px;padding:.7rem 1rem;margin-bottom:1rem}
+.card-head .brand-s{display:flex;align-items:center;gap:.5rem;font-family:var(--display);font-weight:700}
+.card-head .side{margin-left:auto;display:flex;align-items:center;gap:.4rem;background:rgba(46,230,200,.18);border:1px solid rgba(46,230,200,.5);border-radius:999px;padding:.25rem .8rem;font-weight:700;font-size:.9rem}
+
 @media(prefers-reduced-motion:reduce){
   .waves path,.logo .ring,.working i,.flame,.talk-wave,.ember,.bubble{animation:none}
   .talk-wave{opacity:.25}.bubble{opacity:.8}
   .logo .ring{opacity:.35;transform:scale(1)}
   .working i{transform:scaleY(.6)}
 }
+@page{margin:12mm}
 @media print{
   body[data-print]{visibility:hidden;background:#fff}
   body[data-print] #profile-card,body[data-print] #profile-card *{visibility:visible}
-  body[data-print] #profile-card{position:absolute;left:0;top:0;width:100%}
+  body[data-print] #profile-card{position:absolute;left:0;top:0;width:100%;font-size:11.5pt}
+  #profile-card *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #profile-card h2{font-size:22pt;margin:0 0 .2rem}
+  #profile-card section{break-inside:avoid;margin:.6rem 0}
+  #profile-card .card-head{margin-bottom:.6rem}
   .no-print,.hero,.foot{display:none!important}
 }
 </style>
@@ -372,6 +411,11 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
 
   <!-- ============================ MY HEARING ============================ -->
   <section id="view-hearing" role="tabpanel" aria-labelledby="tab-hearing">
+    <ol class="steps no-print" id="steps" aria-label="Steps on this page">
+      <li data-go="#report-panel"><span class="n">1</span><span><b>Upload</b><small>your hearing report</small></span></li>
+      <li data-go=".cols.hearing"><span class="n">2</span><span><b>Check</b><small>your numbers</small></span></li>
+      <li data-go="#make-card"><span class="n">3</span><span><b>Share</b><small>your card</small></span></li>
+    </ol>
     <div class="panel big upload no-print" id="report-panel">
       <span class="step-tag">Step 1 · Start here</span>
       <h2>Upload your hearing report</h2>
@@ -407,6 +451,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
           <span><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:-2px"><circle cx="7" cy="7" r="5" fill="none" stroke="#C23A2E" stroke-width="2.5"/></svg> Right ear</span>
           <span><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:-2px"><path d="M2 2L12 12M12 2L2 12" stroke="#1F55D0" stroke-width="2.5"/></svg> Left ear</span>
           <span><b style="color:#C23A2E">&lt;</b> <b style="color:#1F55D0">&gt;</b> Bone conduction</span>
+          <span><i style="background:rgba(255,181,71,.35);border:1px solid #FFB547"></i>Everyday speech (“speech banana”)</span>
         </div>
         <h3 style="margin-top:1.1rem">What your numbers mean</h3>
         <div class="summary" id="summary" aria-live="polite"></div>
@@ -460,7 +505,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
       </div>
     </div>
     <div class="panel no-print hidden" id="summary-notes" style="margin-top:1.25rem"></div>
-    <div id="profile-out" aria-live="polite"></div>
+    <div id="profile-out" aria-live="polite"><div class="empty"><svg width="64" height="48" viewBox="0 0 64 48" aria-hidden="true"><ellipse cx="32" cy="42" rx="26" ry="5" fill="#EBE5FC"/><rect x="18" y="37" width="28" height="5" rx="2.5" fill="#B9A08F" transform="rotate(8 32 39)"/><rect x="18" y="37" width="28" height="5" rx="2.5" fill="#A88B78" transform="rotate(-8 32 39)"/><path d="M32 38c-10-3-9-15 0-27 9 12 10 24 0 27z" fill="#D0C7EC"/><circle cx="8" cy="34" r="4" fill="#D0C7EC"/><circle cx="56" cy="34" r="4" fill="#D0C7EC"/></svg><p>Your share card will appear here. Press <b>Make my share card</b> in Step 3.</p></div></div>
   </section>
 
   <!-- ============================ PHONE CALLS ============================ -->
@@ -504,7 +549,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
         <button class="btn ghost" id="call-sample" type="button">Fill in an example</button>
       </div>
     </div>
-    <div id="call-out" class="result" aria-live="polite"></div>
+    <div id="call-out" class="result" aria-live="polite"><div class="empty"><svg width="64" height="48" viewBox="0 0 64 48" aria-hidden="true"><ellipse cx="32" cy="42" rx="26" ry="5" fill="#EBE5FC"/><rect x="18" y="37" width="28" height="5" rx="2.5" fill="#B9A08F" transform="rotate(8 32 39)"/><rect x="18" y="37" width="28" height="5" rx="2.5" fill="#A88B78" transform="rotate(-8 32 39)"/><path d="M32 38c-10-3-9-15 0-27 9 12 10 24 0 27z" fill="#D0C7EC"/><circle cx="8" cy="34" r="4" fill="#D0C7EC"/><circle cx="56" cy="34" r="4" fill="#D0C7EC"/></svg><p>Your plan will appear here. Try <b>Fill in an example</b>, then <b>Plan my call</b>.</p></div></div>
   </section>
 
   <!-- ============================ PLACES ============================ -->
@@ -539,7 +584,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
         <button class="btn ghost" id="place-sample" type="button">Load sample reviews (one has a hidden attack)</button>
       </div>
     </div>
-    <div id="place-out" class="result" aria-live="polite"></div>
+    <div id="place-out" class="result" aria-live="polite"><div class="empty"><svg width="64" height="48" viewBox="0 0 64 48" aria-hidden="true"><ellipse cx="32" cy="42" rx="26" ry="5" fill="#EBE5FC"/><rect x="18" y="37" width="28" height="5" rx="2.5" fill="#B9A08F" transform="rotate(8 32 39)"/><rect x="18" y="37" width="28" height="5" rx="2.5" fill="#A88B78" transform="rotate(-8 32 39)"/><path d="M32 38c-10-3-9-15 0-27 9 12 10 24 0 27z" fill="#D0C7EC"/><circle cx="8" cy="34" r="4" fill="#D0C7EC"/><circle cx="56" cy="34" r="4" fill="#D0C7EC"/></svg><p>Your listening-effort score will appear here. Try <b>Load sample reviews</b>, then <b>Check this place</b>.</p></div></div>
   </section>
   <!-- ============================ WHAT'S NEW ============================ -->
   <section id="view-news" role="tabpanel" aria-labelledby="tab-news" class="hidden">
@@ -549,6 +594,14 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
         <button class="btn" id="news-refresh" type="button">Search for newer news</button>
         <span class="field-hint" id="news-checked"></span>
+      </div>
+      <div class="filters" role="group" aria-label="Filter stories">
+        <button type="button" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" data-filter="you" aria-pressed="false">For you</button>
+        <button type="button" data-filter="implants" aria-pressed="false">Implants</button>
+        <button type="button" data-filter="bone" aria-pressed="false">Bone conduction</button>
+        <button type="button" data-filter="devices" aria-pressed="false">Hearing aids, glasses &amp; earbuds</button>
+        <button type="button" data-filter="research" aria-pressed="false">Research</button>
       </div>
       <div id="news-live" aria-live="polite"></div>
       <div class="news-grid" id="news-grid"></div>
@@ -595,7 +648,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
         <button class="btn ghost" id="circle-sample" type="button">Fill in an example</button>
       </div>
     </div>
-    <div id="circle-out" class="result" aria-live="polite"></div>
+    <div id="circle-out" class="result" aria-live="polite"><div class="empty"><svg width="64" height="48" viewBox="0 0 64 48" aria-hidden="true"><ellipse cx="32" cy="42" rx="26" ry="5" fill="#EBE5FC"/><rect x="18" y="37" width="28" height="5" rx="2.5" fill="#B9A08F" transform="rotate(8 32 39)"/><rect x="18" y="37" width="28" height="5" rx="2.5" fill="#A88B78" transform="rotate(-8 32 39)"/><path d="M32 38c-10-3-9-15 0-27 9 12 10 24 0 27z" fill="#D0C7EC"/><circle cx="8" cy="34" r="4" fill="#D0C7EC"/><circle cx="56" cy="34" r="4" fill="#D0C7EC"/></svg><p>Your seating map will appear here. Try <b>Fill in an example</b>, then <b>Plan my seat</b>.</p></div></div>
   </section>
 </main>
 <footer class="foot no-print">
@@ -684,6 +737,13 @@ function drawChart(){
   s+=`<text x="6" y="${T-12}" font-size="13" fill="#5A5378">Hz</text>`;
   s+=`<text x="12" y="${T+GH/2}" font-size="13" fill="#5A5378" transform="rotate(-90 12 ${T+GH/2})" text-anchor="middle">Quietest sound you hear (dB)</text>`;
 
+  // the "speech banana": where everyday speech sits on an audiogram (approximate)
+  const BAN_TOP=[[250,30],[500,24],[1000,20],[2000,17],[4000,16],[6000,18],[8000,24]];
+  const BAN_BOT=[[8000,40],[6000,42],[4000,46],[2000,52],[1000,56],[500,58],[250,58]];
+  const banPts=[...BAN_TOP,...BAN_BOT].map(([f,d])=>`${xHz(f).toFixed(1)},${yOf(d).toFixed(1)}`);
+  s+=`<defs><linearGradient id="banana-g" x1="0" x2="1"><stop offset="0" stop-color="#FFB547" stop-opacity=".28"/><stop offset="1" stop-color="#FF7A59" stop-opacity=".2"/></linearGradient></defs>
+    <polygon points="${banPts.join(' ')}" fill="url(#banana-g)" stroke="#FFB547" stroke-opacity=".55" stroke-width="1.5" stroke-linejoin="round"/>
+    <text x="${xHz(5200)}" y="${yOf(49)}" font-size="11" fill="#B26A00" text-anchor="middle">everyday speech</text>`;
   // speech sounds
   const sounds=state.analysis?state.analysis.sounds:null;
   (sounds||[{sound:'oo',hz:300,speech_level_db:50},{sound:'m',hz:400,speech_level_db:45},{sound:'b',hz:500,speech_level_db:40},{sound:'ah',hz:800,speech_level_db:50},{sound:'d',hz:1000,speech_level_db:40},{sound:'k',hz:2000,speech_level_db:30},{sound:'sh',hz:3000,speech_level_db:40},{sound:'t',hz:3500,speech_level_db:30},{sound:'f',hz:4000,speech_level_db:25},{sound:'th',hz:5000,speech_level_db:25},{sound:'s',hz:6000,speech_level_db:28}]).forEach(p=>{
@@ -808,8 +868,13 @@ function profileText(){
   if(a.seat_side)t+=`; hears best on the ${a.seat_side}`;
   return t;
 }
+function updateSteps(){
+  const p=state.progress||{},done=[!!state.report,hearingSet(),!!p.card];
+  $$('#steps li').forEach((li,i)=>{li.classList.toggle('done',done[i]);li.querySelector('.n').textContent=done[i]?'\u2713':String(i+1);});
+}
+$$('#steps li').forEach(li=>li.addEventListener('click',()=>{const t=document.querySelector(li.dataset.go);if(t)t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});}));
 function updateProfileBanners(){
-  updateCampfire();
+  updateCampfire();updateSteps();
   const t=profileText(),r=state.report,set=hearingSet();
   const st=$('#howto-state');
   st.textContent=set?(r&&r.example?'\u2713 Using the example report':r?'\u2713 Your hearing report is set':'\u2713 Your numbers are set'):'Not set up yet: start on My hearing';
@@ -997,7 +1062,10 @@ $('#make-card').addEventListener('click',()=>guarded($('#make-card'),$('#profile
   const group=(st,label)=>{const s=a.sounds.filter(x=>x.overall===st);return s.length?`<p><b>${label}</b></p><div class="chips">${s.map(x=>`<span class="chip ${st}" title="as in ${esc(x.example)}">${esc(x.sound)}</span>`).join('')}</div>`:'';};
   const name=$('#first-name').value.trim();
   const share=txt(c.share_script);
+  const side=a.seat_side;
   $('#profile-out').innerHTML=`<div class="panel big result"><article id="profile-card">
+    <div class="card-head"><span class="brand-s"><svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 47c-14-4-12-20 0-36 12 16 14 32 0 36z" fill="#FF7A59"/><path d="M32 47c-7-2-6-11 0-19 6 8 7 17 0 19z" fill="#FFE29A"/></svg>Hearing Hub · how I hear</span>
+      ${side?`<span class="side">${side==='left'?'&larr;':''} Please sit or walk on my ${esc(side)} ${side==='right'?'&rarr;':''}</span>`:''}</div>
     <h2>${name?esc(name)+': how I hear':'How I hear'}</h2>
     <p style="font-size:1.15rem;margin-bottom:.8rem">${esc(c.headline)}</p>
     ${state.example?'<div class="banner no-print">This card uses the example numbers. Enter yours first.</div>':''}
@@ -1012,6 +1080,7 @@ $('#make-card').addEventListener('click',()=>guarded($('#make-card'),$('#profile
     <div style="display:flex;gap:.5rem;flex-wrap:wrap" class="no-print">${copyBtn(share)}<button type="button" class="btn ghost small" id="print-card">Print this card</button></div>
     ${runDetails(j.run)}</div>`;
   $('#print-card').addEventListener('click',()=>{document.body.dataset.print='card';window.print();setTimeout(()=>delete document.body.dataset.print,500);});
+  markDone('card');
 }));
 
 /* ---------- phone calls ---------- */
@@ -1030,6 +1099,11 @@ $('#call-go').addEventListener('click',()=>guarded($('#call-go'),$('#call-out'),
   const qa=(pp.questions||[]).map(q=>`<tr><td>${esc(txt(q.they_may_ask))}</td><td>${esc(txt(q.your_answer))}</td></tr>`).join('');
   $('#call-out').innerHTML=`<div class="panel big">
     <h2>${esc(r.summary)}</h2>
+    <div class="flow" aria-label="The plan in three steps">
+      <div class="fs"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5B3FD9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span><b>1. Send the message</b><small>${esc(txt(md.channel||'in writing'))}</small></span></div><span class="arr" aria-hidden="true">&rarr;</span>
+      <div class="fs backup"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#B26A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span><b>2. Call only if needed</b><small>script below</small></span></div><span class="arr" aria-hidden="true">&rarr;</span>
+      <div class="fs"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0E7A63" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8.5 15l2.5 2.5 4.5-5"/></svg><span><b>3. Get it in writing</b><small>follow-up email</small></span></div>
+    </div>
     <section class="key"><h3>Best route: ${esc(txt(br.name))}</h3><p>${esc(txt(br.why))}</p>
       <ol class="plain">${(br.steps||[]).map(s=>'<li>'+esc(txt(s))+'</li>').join('')}</ol></section>
     ${contactsHtml(r)}
@@ -1105,7 +1179,7 @@ function drawCampfire(){
   g+=`<g id="you-fig"><circle class="glow" cy="-28" r="32" fill="#2EE6C8" fill-opacity=".22"/>${person(0,0,1,'url(#you-grad)')}<text y="16" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" font-family="Space Grotesk, sans-serif">You</text></g>`;
   $('#campfire').innerHTML=$('#campfire').querySelector('title').outerHTML+g;
 }
-function markDone(step){state.progress=state.progress||{};state.progress[step]=true;save();updateCampfire();}
+function markDone(step){state.progress=state.progress||{};state.progress[step]=true;save();updateCampfire();updateSteps();}
 function updateCampfire(){
   const fig=$('#you-fig');if(!fig)return;
   const p=state.progress||{};
@@ -1116,6 +1190,19 @@ function updateCampfire(){
   fig.classList.toggle('joined',n===4);
   $$('#fire-dots i').forEach((d,i)=>d.classList.toggle('on',done[i]));
   $('#fire-text').textContent=n===4?'You are in the circle.':n===0?'You are at the edge of the circle. Start on My hearing.':`${n} of 4 tools used. You are getting closer to the fire.`;
+}
+
+/* ---------- places gauge: a volume dial, green (easy) to red (hard) ---------- */
+function gauge(score){
+  const cx=115,cy=110,R=88,pt=(v,r)=>{const a=Math.PI*(1-(v-1)/9);return [cx+r*Math.cos(a),cy-r*Math.sin(a)];};
+  const seg=[[1,3.5,'#19B394'],[3.5,6.5,'#FFB547'],[6.5,8.5,'#FF7A59'],[8.5,10,'#D92D20']];
+  let g='';
+  seg.forEach(([a,b,c])=>{const [x1,y1]=pt(a,R),[x2,y2]=pt(b,R);g+=`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${R} ${R} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${c}" stroke-width="18" fill="none"/>`;});
+  for(let v=1;v<=10;v++){const [x1,y1]=pt(v,R-14),[x2,y2]=pt(v,R-20);g+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#B9AEE6" stroke-width="2"/>`;}
+  const [nx,ny]=pt(Math.max(1,Math.min(10,score)),R-26);
+  g+=`<line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#1E1550" stroke-width="5" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="9" fill="#1E1550"/>
+    <text x="${cx-R}" y="${cy+18}" font-size="12" fill="#5A5378" text-anchor="middle">easy</text><text x="${cx+R}" y="${cy+18}" font-size="12" fill="#5A5378" text-anchor="middle">hard</text>`;
+  return `<svg class="gauge" viewBox="0 0 230 132" role="img" aria-label="Listening effort ${score} out of 10">${g}</svg>`;
 }
 
 /* ---------- places ---------- */
@@ -1150,8 +1237,7 @@ $('#place-go').addEventListener('click',()=>guarded($('#place-go'),$('#place-out
   const ask=txt((r.ask_ahead||[]).map(x=>'- '+txt(x)).join('\n'));
   $('#place-out').innerHTML=`<div class="panel big">${warn}
     ${r.image_used===false&&photoData?'<div class="banner">This model could not read the photo, so only your text was used.</div>':''}
-    <div class="score"><b>${r.score}</b><span>out of 10 for listening effort. ${esc(r.verdict)}</span></div>
-    <div class="bar" aria-hidden="true">${Array.from({length:10},(_,i)=>`<i class="${i<Math.round(r.score)?'on':''}"></i>`).join('')}</div>
+    <div class="gauge-wrap">${gauge(r.score)}<div class="score"><b>${r.score}</b><span>out of 10 for listening effort.<br>${esc(r.verdict)}</span></div></div>
     <p class="field-hint">Score is calculated by a tool from the features below, adjusted for your hearing profile. The AI does not pick the number.</p>
     <section class="key"><h3>Best seat</h3><p>${esc(r.best_seat)}</p></section>
     <section><h3>What the score is based on</h3><ul class="plain" style="list-style:none;padding:0">${feats||'<li>No features found.</li>'}</ul></section>
@@ -1211,9 +1297,15 @@ function newsCard(it){
     ${it.caveat?`<p class="caveat"><b>Good to know:</b> ${esc(it.caveat)}</p>`:''}
     <p class="src">Sources: ${src}</p></div></article>`;
 }
+let newsItems=[],newsFilter='all';
+const FILTER_TAGS={implants:['Cochlear implants'],bone:['Bone conduction'],devices:['Hearing aids','Hearing glasses','Earbuds'],research:['Gene therapy']};
 function renderNews(items){
+  if(items)newsItems=items;
   const dev=$('#device').value;
-  const sorted=[...items].sort((a,b)=>((b.for_devices||[]).includes(dev)&&dev!=='none')-((a.for_devices||[]).includes(dev)&&dev!=='none'));
+  const isMine=it=>(it.for_devices||[]).includes(dev)&&dev!=='none';
+  const shown=newsItems.filter(it=>newsFilter==='all'||(newsFilter==='you'?isMine(it):(FILTER_TAGS[newsFilter]||[]).includes(it.tag)));
+  if(!shown.length){$('#news-grid').innerHTML='<p class="field-hint">No stories in this group yet. Set your device in My hearing to see what is for you.</p>';return;}
+  const sorted=[...shown].sort((a,b)=>((b.for_devices||[]).includes(dev)&&dev!=='none')-((a.for_devices||[]).includes(dev)&&dev!=='none'));
   $('#news-grid').innerHTML=sorted.map(newsCard).join('');
   balanceGrid($('#news-grid'));
 }
@@ -1232,6 +1324,9 @@ async function loadNews(){
     $('#news-checked').textContent=`Hand-checked list, sources read on ${j.checked}.`;}
   catch(e){newsLoaded=false;$('#news-grid').innerHTML='<div class="err">Could not load the news list.</div>';}
 }
+$$('.filters button').forEach(b=>b.addEventListener('click',()=>{
+  newsFilter=b.dataset.filter;$$('.filters button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));renderNews();
+}));
 $('#news-refresh').addEventListener('click',()=>guarded($('#news-refresh'),$('#news-live'),async()=>{
   const j=await api('/api/news',{device:$('#device').value});
   setMeter(j.session);
