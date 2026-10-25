@@ -1,0 +1,2 @@
+openai>=1.40
+pymupdf>=1.24  # reads PDF reports and resizes uploaded pictures
