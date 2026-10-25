@@ -89,7 +89,7 @@ h3{font-family:var(--display);font-size:1.15rem;margin-bottom:.4rem}
 .lede{color:var(--ink-2);max-width:62ch;margin-bottom:1rem}
 .cols{display:grid;gap:1.25rem;grid-template-columns:minmax(0,1fr)}
 .cols>*{min-width:0}
-@media(min-width:980px){.cols.hearing{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);align-items:start}.cols.two{grid-template-columns:1fr 1fr}}
+@media(min-width:980px){.cols.hearing{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);align-items:stretch}.cols.two{grid-template-columns:1fr 1fr}}
 
 /* ---------- chart + inputs ---------- */
 #chart{width:100%;height:auto;display:block;cursor:crosshair;user-select:none;border-radius:14px}
@@ -116,10 +116,12 @@ table.grid tr.bone input{border-style:dashed}
 .device-row{display:grid;grid-template-columns:2fr 1fr;gap:.5rem}
 .summary{background:linear-gradient(180deg,#FBFAFF,#F4F1FD);border:1px solid var(--line);border-radius:14px;padding:.75rem .9rem;margin:.2rem 0 .4rem}
 .summary:empty{display:none}
-.summary .notes{margin:.4rem 0 0;padding-left:1.1rem;font-size:.92rem}
+#summary-notes .notes{margin:.2rem 0 0;padding-left:1.1rem;display:grid;gap:.3rem 2rem;grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+#summary-notes h3{margin-bottom:.3rem}
 .checks label{display:flex;gap:.6rem;align-items:flex-start;margin:.5rem 0 .9rem}
 .checks input{margin-top:.3rem;width:1.1rem;height:1.1rem;accent-color:var(--violet)}
-.presets{display:flex;flex-wrap:wrap;gap:.4rem;margin:.4rem 0 .9rem}
+.presets{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin:.3rem 0 .6rem}
+.presets .btn.small{padding:.25rem .65rem}
 label.field{display:block;font-weight:700;margin:.8rem 0 .25rem}
 .field-hint{font-weight:400;color:var(--ink-2);font-size:.85rem}
 input[type=text],select,textarea{width:100%;padding:.6rem .75rem;border:2px solid var(--line);border-radius:12px;background:#fff}
@@ -133,6 +135,7 @@ legend{font-weight:700;padding:0;margin-bottom:.25rem}
 .banner{border-left:5px solid var(--amber);background:#FFF7E8;padding:.6rem .85rem;border-radius:0 12px 12px 0;font-size:.92rem;margin-bottom:.8rem}
 .banner.shield{border-color:var(--clear);background:#E7F7F2}
 .summary p{margin:.25rem 0}
+.summary .ears{display:grid;gap:.2rem 1.2rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .summary .ear-r{color:var(--right);font-weight:700} .summary .ear-l{color:var(--left);font-weight:700}
 
 /* ---------- results ---------- */
@@ -398,6 +401,8 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
           <span><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:-2px"><path d="M2 2L12 12M12 2L2 12" stroke="#1F55D0" stroke-width="2.5"/></svg> Left ear</span>
           <span><b style="color:#C23A2E">&lt;</b> <b style="color:#1F55D0">&gt;</b> Bone conduction</span>
         </div>
+        <h3 style="margin-top:1.1rem">What your numbers mean</h3>
+        <div class="summary" id="summary" aria-live="polite"></div>
       </div>
 
       <div class="panel no-print">
@@ -409,15 +414,15 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
           <button type="button" class="l" id="ear-left" aria-pressed="false">Left ear</button>
         </div>
         <table class="grid" id="grid"></table>
-        <p class="field-hint" style="margin:-.4rem 0 .6rem">Bone rows are optional. On your report they are the &lt; and &gt; marks (or [ and ]). They tell the app whether your loss is conductive.</p>
+        <p class="field-hint" style="margin:-.4rem 0 .5rem">Bone rows (the &lt; &gt; or [ ] marks) are optional. They show if your loss is conductive.</p>
         <div class="presets" role="group" aria-label="Example audiograms">
-          <button type="button" class="btn ghost small" data-preset="conductive">Conductive example (real, atresia)</button>
-          <button type="button" class="btn ghost small" data-preset="sloping">Sloping example</button>
-          <button type="button" class="btn ghost small" data-preset="mild">Mild example</button>
-          <button type="button" class="btn ghost small" data-preset="flat">Moderate flat example</button>
-          <button type="button" class="btn ghost small" data-preset="clear">Clear all</button>
+          <span class="field-hint">Examples:</span>
+          <button type="button" class="btn ghost small" data-preset="conductive" title="Real audiogram: bilateral atresia">Conductive (real)</button>
+          <button type="button" class="btn ghost small" data-preset="sloping">Sloping</button>
+          <button type="button" class="btn ghost small" data-preset="mild">Mild</button>
+          <button type="button" class="btn ghost small" data-preset="flat">Flat</button>
+          <button type="button" class="btn ghost small" data-preset="clear">Clear</button>
         </div>
-        <div class="summary" id="summary" aria-live="polite"></div>
         <label class="field" for="first-name">First name <span class="field-hint">(optional, used on your card)</span></label>
         <input type="text" id="first-name" maxlength="40" autocomplete="given-name">
         <label class="field" for="device">Hearing device <span class="field-hint">(optional)</span></label>
@@ -447,6 +452,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
         </div>
       </div>
     </div>
+    <div class="panel no-print hidden" id="summary-notes" style="margin-top:1.25rem"></div>
     <div id="profile-out" aria-live="polite"></div>
   </section>
 
@@ -771,19 +777,20 @@ function earLine(a){
     const e=a.ears[k];if(!e)return;
     const type=e.loss_type&&!e.loss_type.startsWith('unknown')?` <b>${esc(e.loss_type)}</b>`:'';
     const gap=e.air_bone_gap_db!=null?`, air–bone gap ${e.air_bone_gap_db} dB`:'';
-    h+=`<p><span class="${c}">${label}:</span> ${esc(e.degree)}${type} (average ${e.pta_db} dB${gap}), ${esc(e.configuration)}</p>`;
+    h+=`<p><span class="${c}">${label}:</span> ${esc(e.degree)}${type}<br><span class="field-hint">average ${e.pta_db} dB${gap}; ${esc(e.configuration.split(' (')[0])}</span></p>`;
   });
-  return h;
+  return `<div class="ears">${h}</div>`;
 }
 function renderSummary(msg){
   const a=state.analysis;
-  if(!a){$('#summary').innerHTML=`<p>${esc(msg||'')}</p>`;return;}
+  if(!a){$('#summary').innerHTML=`<p>${esc(msg||'')}</p>`;$('#summary-notes').classList.add('hidden');return;}
   let h=earLine(a);
   if(a.asymmetry)h+=`<p>${esc(a.asymmetry)}</p>`;
   h+=a.missed_sounds.length?`<p>Likely missed without amplification: <b>${a.missed_sounds.map(esc).join(', ')}</b></p>`:'<p>No speech sounds are predicted to be missed at conversation level.</p>';
-  const notes=[...(a.loss_type_notes||[]),...((a.device&&a.device.notes)||[])];
-  if(notes.length)h+=`<ul class="notes">${notes.map(n=>'<li>'+esc(n)+'</li>').join('')}</ul>`;
   h+=`<p class="field-hint">Estimates from your unaided numbers. Not a diagnosis.</p>`;
+  const notes=[...(a.loss_type_notes||[]),...((a.device&&a.device.notes)||[])];
+  $('#summary-notes').innerHTML=notes.length?`<h3>What this means for you</h3><ul class="notes">${notes.map(n=>'<li>'+esc(n)+'</li>').join('')}</ul>`:'';
+  $('#summary-notes').classList.toggle('hidden',!notes.length);
   $('#summary').innerHTML=h;
 }
 function profileText(){
