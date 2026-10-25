@@ -1,5 +1,7 @@
 # Hearing Hub
 
+**Live app:** https://hearing-hub.onrender.com (free Render instance: the first visit after a quiet spell can take about a minute to wake up)
+
 An AI agent app for Deaf and hard-of-hearing (DHH) people. *Every conversation is a campfire. Take your seat.* It is **not** a transcription app. It helps with
 what happens *around* conversations, where people get stuck.
 
