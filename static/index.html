@@ -323,6 +323,11 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
 /* ---------- empty states ---------- */
 .empty{display:flex;align-items:center;gap:1rem;color:var(--ink-2);border:1px dashed var(--line);border-radius:18px;padding:1rem 1.2rem;margin-top:1.2rem;background:rgba(255,255,255,.6)}
 .empty p{margin:0}
+.cols.hearing>.panel:first-child{display:flex;flex-direction:column}
+#chart-empty{flex:1;flex-direction:column;justify-content:center;text-align:center;gap:.8rem;margin:0;padding:2rem 1.5rem;min-height:340px}
+#chart-empty svg{width:150px;height:auto}
+#chart-empty p{max-width:30rem}
+#chart-empty .btns{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
 /* ---------- news filters ---------- */
 .filters{display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0 0}
 .filters button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:.3rem .8rem;font-size:.85rem;font-weight:700;color:var(--ink-2);cursor:pointer}
@@ -433,7 +438,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
       <div class="upload-actions">
         <button class="btn" id="read-report" type="button" disabled>Read my report</button>
         <button class="btn ghost" id="report-example" type="button">Fill in an example (Deep's real report)</button>
-        <button class="btn ghost hidden" id="clear-report" type="button">Remove my report</button>
+        <button class="btn ghost hidden" id="clear-report" type="button">Remove my report and start over</button>
       </div>
       <p class="field-hint privacy"><svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><rect x="1" y="7" width="12" height="8" rx="2" fill="#5A5378"/><path d="M4 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="#5A5378" stroke-width="2"/></svg>
         Files are read once and are not saved on the server. Names, addresses and ID numbers are never copied out. Always check the numbers against your original report.</p>
@@ -441,6 +446,9 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
     </div>
     <div class="cols hearing">
       <div class="panel big no-print">
+        <div class="empty" id="chart-empty"><svg width="64" height="48" viewBox="0 0 64 48" aria-hidden="true"><ellipse cx="32" cy="42" rx="26" ry="5" fill="#EBE5FC"/><rect x="18" y="37" width="28" height="5" rx="2.5" fill="#B9A08F" transform="rotate(8 32 39)"/><rect x="18" y="37" width="28" height="5" rx="2.5" fill="#A88B78" transform="rotate(-8 32 39)"/><path d="M32 38c-10-3-9-15 0-27 9 12 10 24 0 27z" fill="#D0C7EC"/><circle cx="8" cy="34" r="4" fill="#D0C7EC"/><circle cx="56" cy="34" r="4" fill="#D0C7EC"/></svg><p><b>Your hearing chart will appear here.</b> Upload your report in Step 1, or press <b>Fill in an example</b>. You can also type your numbers in Step 2.</p>
+          <div class="btns"><button type="button" class="btn small" id="chart-empty-upload">Upload my report</button><button type="button" class="btn ghost small" id="chart-empty-example">Fill in an example</button></div></div>
+        <div id="chart-body" class="hidden">
         <h2>Your hearing, drawn out</h2>
         <p class="lede">Click the chart to place each test result, or type the numbers on the right. Speech sounds light up or fade to show what you are likely to catch.</p>
         <svg id="chart" viewBox="0 0 720 440" role="img" aria-label="Audiogram chart with speech sounds"><g id="chart-layer"></g></svg>
@@ -455,6 +463,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
         </div>
         <h3 style="margin-top:1.1rem">What your numbers mean</h3>
         <div class="summary" id="summary" aria-live="polite"></div>
+        </div>
       </div>
 
       <div class="panel no-print">
@@ -825,9 +834,17 @@ $$('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
 }));
 
 let timer;
+function hasData(){return enough('right')||enough('left');}
+function showHearingParts(){
+  const on=hasData();
+  $('#chart-body').classList.toggle('hidden',!on);$('#chart-empty').classList.toggle('hidden',on);
+  $('#example-banner').classList.toggle('hidden',!(on&&state.example));
+  $('#clear-report').classList.toggle('hidden',!(on||state.report));
+  if(!on)$('#summary-notes').classList.add('hidden');
+}
 function afterEdit(skipInputs){
   if(!skipInputs)syncInputs();
-  $('#example-banner').classList.toggle('hidden',!state.example);
+  showHearingParts();
   drawChart();save();
   clearTimeout(timer);timer=setTimeout(refreshAnalysis,180);
 }
@@ -1043,15 +1060,28 @@ $('#report-example').addEventListener('click',()=>{
   const r=EXAMPLE_REPORT;
   state.right={...r.right_air};state.left={...r.left_air};state.right_bc={...r.right_bone};state.left_bc={...r.left_bone};state.example=false;
   $('#device').value=r.device;$('#device-side').value=r.device_side;$('#first-name').value=r.first_name;
-  if(!$('#my-notes').value.trim())$('#my-notes').value='I have a Bonebridge implant only on my left ear. My right ear has no device.\nPhone calls and noisy group dinners are the hardest for me.';
+  if(!$('#my-notes').value.trim())$('#my-notes').value=EXAMPLE_NOTES;
   state.report=JSON.parse(JSON.stringify(r));
   afterEdit();updateProfileBanners();$('#clear-report').classList.remove('hidden');
   renderReport(state.report,r.files.map(n=>({name:n,note:'example'})),[],null);
   $('#report-out').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
 });
-$('#clear-report').addEventListener('click',()=>{
-  state.report=null;save();updateProfileBanners();$('#report-out').innerHTML='';$('#clear-report').classList.add('hidden');
-});
+const EMPTY_OUT={};['profile-out','call-out','place-out','circle-out'].forEach(id=>EMPTY_OUT[id]=$('#'+id).innerHTML);
+const EXAMPLE_NOTES='I have a Bonebridge implant only on my left ear. My right ear has no device.\nPhone calls and noisy group dinners are the hardest for me.';
+function startOver(){
+  const wasExample=!!(state.report&&state.report.example);
+  state.report=null;state.analysis=null;state.example=false;state.progress={};
+  state.right={};state.left={};state.right_bc={};state.left_bc={};
+  $('#device').value='none';$('#device-side').value='';
+  if(wasExample){if($('#first-name').value==='Deep')$('#first-name').value='';if($('#my-notes').value===EXAMPLE_NOTES)$('#my-notes').value='';}
+  upFiles=[];renderFileList();
+  $('#report-out').innerHTML='';$('#summary').innerHTML='';$('#summary-notes').innerHTML='';
+  Object.entries(EMPTY_OUT).forEach(([id,h])=>$('#'+id).innerHTML=h);
+  afterEdit();updateProfileBanners();
+}
+$('#clear-report').addEventListener('click',startOver);
+$('#chart-empty-example').addEventListener('click',()=>$('#report-example').click());
+$('#chart-empty-upload').addEventListener('click',()=>{$('#report-panel').scrollIntoView({behavior:'smooth',block:'start'});$('#report-files').click();});
 
 /* ---------- profile card ---------- */
 $('#make-card').addEventListener('click',()=>guarded($('#make-card'),$('#profile-out'),async()=>{
@@ -1391,10 +1421,11 @@ $('#circle-go').addEventListener('click',()=>guarded($('#circle-go'),$('#circle-
 /* ---------- start ---------- */
 drawCampfire();
 buildGrid();
-if(!load()){const p=PRESETS.conductive;state.right={...p.right};state.left={...p.left};state.right_bc={...p.right_bc};state.left_bc={...p.left_bc};$('#device').value=p.device;$('#device-side').value=p.side;state.example=true;}
+// A fresh visit starts empty. Old saves that only held the demo audiogram start empty too.
+if(load()&&state.example&&!state.report){state.right={};state.left={};state.right_bc={};state.left_bc={};state.example=false;$('#device').value='none';$('#device-side').value='';}
 ['#first-name','#lip'].forEach(s=>$(s).addEventListener('change',save));
 $('#my-notes').addEventListener('input',()=>{save();updateProfileBanners();});
-if(state.report){$('#clear-report').classList.remove('hidden');renderReport(state.report,(state.report.files||[]).map(n=>({name:n,note:'read earlier'})),[],null);}
+if(state.report){renderReport(state.report,(state.report.files||[]).map(n=>({name:n,note:'read earlier'})),[],null);}
 ['#device','#device-side'].forEach(s=>$(s).addEventListener('change',()=>{save();refreshAnalysis();}));
 afterEdit();
 </script>
