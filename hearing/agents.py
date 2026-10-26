@@ -347,6 +347,17 @@ you cannot see (for example music or crowd noise). Reviews are weaker evidence t
 report_notes (if any) are facts from the person's hearing documents; use them to tailor advice.
 If hears_best_on_side is set, the person hears mainly on that side: seating advice must put the people they talk
 with on that side and keep noise sources (kitchen, speakers, street) on the other side.
+A speakerphone, a PA speaker, a lecturer or anyone the person needs to follow is something they WANT to hear:
+put it on their hearing side or in front of them, never on the other side. Only noise (kitchen, music, TV, fans,
+street, other tables) goes on the other side.
+Fit the advice to the place type and what is happening there: a lecture needs a front seat, a microphone for
+questions and captions or slides; a waiting room needs another way to be called than a voice (a text, a buzzer,
+being fetched); a meeting needs one speaker at a time and captions on calls; an event needs a quieter side area.
+Requests to the venue must be realistic for that place (do not ask a team to shrink its meeting).
+A hearing loop only reaches devices with a telecoil (T-setting). Bone-conduction processors have none built in, so
+for them say the loop may help only with a streaming accessory, never just "use the loop".
+A TV counts as background_music. If the evidence for a feature is a guess (for example "not confirmed"), leave the
+feature out. If there is too little to go on, list no features and say so in confidence_reason.
 Then call score_acoustics with the features you found. Allowed features:
 """ + ", ".join(tools.FEATURES.keys()) + """
 The app shows the tool's score and verdict itself, so do not mention the score or verdict in any text field.
@@ -359,6 +370,10 @@ Return JSON with exactly these keys:
  "confidence": "<low|medium|high>",
  "confidence_reason": "<one sentence>"}"""
 
+# Evidence that admits it is a guess does not count toward the score.
+GUESS = re.compile(r"\b(?:not (?:confirmed|stated|mentioned|described|shown|visible|clear|known)|unclear|unknown|"
+                   r"no (?:evidence|information|details?)|cannot (?:see|tell)|can't (?:see|tell)|assum\w*)\b", re.I)
+
 SCORE_MENTION = re.compile(r"[;,]?\s*\b(?:(?:tool\s+)?score\s*:\s*\d+(?:\.\d+)?(?:\s*/\s*10)?|verdict\s*:\s*[^.;]*)[.;]?", re.I)
 
 PLACE_REQUIRED = {"features": list, "best_seat": str, "avoid": list, "ask_ahead": list,
@@ -370,10 +385,11 @@ def place_scout(venue_type, purpose, description, reviews, image_data_url, analy
     hf = bool(analysis and analysis.get("high_frequency_trouble"))
     one_side = bool(analysis and analysis.get("single_sided"))
     seat_side = analysis.get("seat_side") if analysis else None
+    device = ((analysis or {}).get("device") or {}).get("type")
     scored = {}
 
     def score_tool(features=None):
-        res = tools.score_acoustics(features or [], hf, lipreading, one_side)
+        res = tools.score_acoustics(features or [], hf, lipreading, one_side, device)
         scored.update(res)
         return res
 
@@ -417,12 +433,16 @@ def place_scout(venue_type, purpose, description, reviews, image_data_url, analy
     # evidence count, and the score is always (re)computed by the tool from exactly those.
     evidenced = []
     for f in obj.get("features", []):
-        if isinstance(f, dict) and f.get("feature") in tools.FEATURES and str(f.get("evidence", "")).strip():
+        if isinstance(f, dict) and f.get("feature") in tools.FEATURES and str(f.get("evidence", "")).strip() \
+                and not GUESS.search(str(f.get("evidence", ""))):
             if f["feature"] not in evidenced:
                 evidenced.append(f["feature"])
     obj["features"] = [f for f in obj.get("features", [])
                        if isinstance(f, dict) and f.get("feature") in evidenced]
-    final = tools.score_acoustics(evidenced, hf, lipreading, one_side)
+    final = tools.score_acoustics(evidenced, hf, lipreading, one_side, device)
+    if not evidenced:
+        # nothing to go on: say so instead of showing a made-up "Easy"
+        final = {**final, "score": None, "verdict": "Not enough detail to score"}
     if not scored:
         trace.append({"agent": "place", "step": "guard", "tool": "score_acoustics",
                       "note": "model skipped the tool; the app scored it from the listed features"})

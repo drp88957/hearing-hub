@@ -212,6 +212,23 @@ class SituationTests(unittest.TestCase):
         self.assertFalse(self.sit("Dinner at a restaurant", ["Mom"])["hosting"])
 
 
+class PlaceEvidenceTests(unittest.TestCase):
+    def test_guessed_evidence_is_caught(self):
+        from hearing.agents import GUESS
+        self.assertTrue(GUESS.search("Large hall; the ceiling height is not confirmed."))
+        self.assertTrue(GUESS.search("No evidence of music, but it may be loud"))
+        self.assertFalse(GUESS.search("Tile floors and an open kitchen in the photo"))
+
+    def test_new_features_score(self):
+        r = tools.score_acoustics(["fan_or_hum", "speakerphone_or_pa", "names_called_aloud"])
+        self.assertEqual(r["score"], 6.0)
+
+    def test_loop_helps_less_without_a_telecoil(self):
+        aid = tools.score_acoustics(["hard_surfaces", "hearing_loop"], device="hearing_aids")["score"]
+        bone = tools.score_acoustics(["hard_surfaces", "hearing_loop"], device="bone_conduction_implant")["score"]
+        self.assertEqual((aid, bone), (3.0, 4.5))
+
+
 class ScoreMentionTests(unittest.TestCase):
     """Found in a live run: the model wrote the pre-guard score into its text, which went stale."""
 

@@ -1267,10 +1267,11 @@ $('#place-go').addEventListener('click',()=>guarded($('#place-go'),$('#place-out
   const ask=txt((r.ask_ahead||[]).map(x=>'- '+txt(x)).join('\n'));
   $('#place-out').innerHTML=`<div class="panel big">${warn}
     ${r.image_used===false&&photoData?'<div class="banner">This model could not read the photo, so only your text was used.</div>':''}
-    <div class="gauge-wrap">${gauge(r.score)}<div class="score"><b>${r.score}</b><span>out of 10 for listening effort.<br>${esc(r.verdict)}</span></div></div>
-    <p class="field-hint">Score is calculated by a tool from the features below, adjusted for your hearing profile. The AI does not pick the number.</p>
+    ${r.score==null?`<div class="banner needs"><span><b>Not enough detail to score this place.</b> Add what you know (floors, music, how busy it gets), a photo, or a few reviews, then check again. The tips below are general.</span></div>`
+      :`<div class="gauge-wrap">${gauge(r.score)}<div class="score"><b>${r.score}</b><span>out of 10 for listening effort.<br>${esc(r.verdict)}</span></div></div>`}
+    ${r.score==null?'':`<p class="field-hint">Score is calculated by a tool from the features below, adjusted for your hearing profile. The AI does not pick the number.</p>`}
     <section class="key"><h3>Best seat</h3><p>${esc(r.best_seat)}</p></section>
-    <section><h3>What the score is based on</h3><ul class="plain" style="list-style:none;padding:0">${feats||'<li>No features found.</li>'}</ul></section>
+    ${r.score==null?'':`<section><h3>What the score is based on</h3><ul class="plain" style="list-style:none;padding:0">${feats}</ul></section>`}
     <section><h3>Avoid</h3>${list(r.avoid)}</section>
     <section><h3>Ask the venue ahead of time</h3>${list(r.ask_ahead)}${copyBtn(ask)}</section>
     <section><h3>Backup plan</h3><p>${esc(r.backup_plan)}</p></section>

@@ -481,7 +481,10 @@ FEATURES = {
     "open_kitchen": (1.5, "noise", "An open kitchen adds clatter close to the tables."),
     "background_music": (2.0, "noise", "Music competes with speech."),
     "crowded": (2.0, "noise", "Many voices at once create a wall of noise."),
-    "large_table": (1.0, "noise", "Large groups make it hard to follow who is talking."),
+    "large_table": (1.0, "noise", "Large groups (a big table or a big class) make it hard to follow who is talking."),
+    "fan_or_hum": (1.0, "noise", "Fans, air conditioning or a projector hum cover quiet speech."),
+    "speakerphone_or_pa": (1.0, "noise", "Voices through a speakerphone or PA speaker sound thin and are harder to understand."),
+    "names_called_aloud": (1.0, "access", "Names or announcements are only called out loud, with nothing on a screen."),
     "street_noise": (1.0, "noise", "Traffic or street noise leaks in."),
     "dim_lighting": (1.5, "light", "Low light makes it hard to see faces and lips."),
     "backlit_seating": (1.0, "light", "Bright windows behind the speaker put their face in shadow."),
@@ -494,9 +497,18 @@ FEATURES = {
     "good_face_lighting": (-1.0, "light", "Faces are well lit, which helps with lipreading."),
 }
 BASE_SCORE = 3.0
+# A hearing loop only reaches a device with a telecoil (T-setting). Bone-conduction processors have none built in
+# (some work with a streaming accessory), and without a device a loop needs a separate receiver.
+LOOP_LIMITED = {
+    "bone_conduction_implant": (0.25, "A hearing loop needs a telecoil. Bone-conduction processors have none built in; "
+                                      "it may help only with a streaming accessory, so check with your clinic."),
+    "bone_conduction_softband": (0.25, "A hearing loop needs a telecoil. Bone-conduction processors have none built in; "
+                                       "it may help only with a streaming accessory, so check with your clinic."),
+    "none": (0.25, "A hearing loop needs a telecoil. Without a device, ask the venue for a loop receiver or headset."),
+}
 
 
-def score_acoustics(features, high_freq_trouble=False, relies_on_lipreading=False, single_sided=False):
+def score_acoustics(features, high_freq_trouble=False, relies_on_lipreading=False, single_sided=False, device=None):
     """Score how hard a place is to hear in, from 1 (easy) to 10 (very hard)."""
     if not isinstance(features, list):
         raise ValueError("features must be a list")
@@ -517,6 +529,8 @@ def score_acoustics(features, high_freq_trouble=False, relies_on_lipreading=Fals
             mult = 1.5
         if group == "light" and w < 0 and relies_on_lipreading:
             mult = 1.5
+        if f == "hearing_loop" and device in LOOP_LIMITED:
+            mult, why = LOOP_LIMITED[device]  # a loop only reaches devices with a telecoil
         total += w * mult
         parts.append({"feature": f, "points": round(w * mult, 2), "why": why})
     score = max(1.0, min(10.0, round(total, 1)))
