@@ -433,8 +433,8 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
       </label>
       <ul class="filelist" id="filelist" aria-label="Files to read"></ul>
       <label class="field" for="my-notes">Anything else about your hearing? <span class="field-hint">(optional, in your own words)</span></label>
-      <textarea id="my-notes" maxlength="600" rows="3" placeholder="Example: I have a Bonebridge implant only on my left ear. Noisy restaurants and phone calls are the hardest for me."></textarea>
-      <p class="field-hint" style="margin-top:.2rem">Used in your share card and in every tool. Write one fact per line. Saved only in this browser.</p>
+      <textarea id="my-notes" autocomplete="off" maxlength="600" rows="3" placeholder="Example: I have a Bonebridge implant only on my left ear. Noisy restaurants and phone calls are the hardest for me."></textarea>
+      <p class="field-hint" style="margin-top:.2rem">Used in your share card and in every tool. Write one fact per line. Kept only while this tab is open.</p>
       <div class="upload-actions">
         <button class="btn" id="read-report" type="button" disabled>Read my report</button>
         <button class="btn ghost" id="report-example" type="button">Fill in an example (Deep's real report)</button>
@@ -485,7 +485,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
           <button type="button" class="btn ghost small" data-preset="clear">Clear</button>
         </div>
         <label class="field" for="first-name">First name <span class="field-hint">(optional, used on your card)</span></label>
-        <input type="text" id="first-name" maxlength="40" autocomplete="given-name">
+        <input type="text" id="first-name" maxlength="40" autocomplete="off">
         <label class="field" for="device">Hearing device <span class="field-hint">(optional)</span></label>
         <div class="device-row">
           <select id="device">
@@ -697,8 +697,8 @@ function list(items){return '<ul class="plain">'+(items||[]).map(i=>'<li>'+esc(t
 const num=n=>Number(n).toLocaleString();
 
 /* ---------- storage (best effort) ---------- */
-function save(){try{localStorage.setItem('hh',JSON.stringify({right:state.right,left:state.left,right_bc:state.right_bc,left_bc:state.left_bc,example:state.example,name:$('#first-name').value,device:$('#device').value,side:$('#device-side').value,lip:$('#lip').checked,report:state.report,progress:state.progress,notes:$('#my-notes').value}));}catch(e){}}
-function load(){try{const d=JSON.parse(localStorage.getItem('hh')||'null');if(d){state.right=d.right||{};state.left=d.left||{};state.right_bc=d.right_bc||{};state.left_bc=d.left_bc||{};state.example=!!d.example;$('#first-name').value=d.name||'';$('#device').value=d.device||(d.aids?'hearing_aids':'none');$('#device-side').value=d.side||'';$('#lip').checked=!!d.lip;state.report=d.report||null;state.progress=d.progress||{};$('#my-notes').value=d.notes||'';return true;}}catch(e){}return false;}
+function save(){try{sessionStorage.setItem('hh',JSON.stringify({right:state.right,left:state.left,right_bc:state.right_bc,left_bc:state.left_bc,example:state.example,name:$('#first-name').value,device:$('#device').value,side:$('#device-side').value,lip:$('#lip').checked,report:state.report,progress:state.progress,notes:$('#my-notes').value}));}catch(e){}}
+function load(){try{const d=JSON.parse(sessionStorage.getItem('hh')||'null');if(d&&!(d.report&&d.report.example)&&!(d.example&&!d.report)){state.right=d.right||{};state.left=d.left||{};state.right_bc=d.right_bc||{};state.left_bc=d.left_bc||{};state.example=!!d.example;$('#first-name').value=d.name||'';$('#device').value=d.device||(d.aids?'hearing_aids':'none');$('#device-side').value=d.side||'';$('#lip').checked=!!d.lip;state.report=d.report||null;state.progress=d.progress||{};$('#my-notes').value=d.notes||'';return true;}}catch(e){}return false;}
 
 /* ---------- api ---------- */
 async function api(path,body){
@@ -1085,7 +1085,7 @@ $('#chart-empty-upload').addEventListener('click',()=>{$('#report-panel').scroll
 
 /* ---------- profile card ---------- */
 $('#make-card').addEventListener('click',()=>guarded($('#make-card'),$('#profile-out'),async()=>{
-  if(!state.analysis)throw new Error('Add at least 3 test results for one ear first.');
+  if(!state.analysis)throw new Error('First upload your report in Step 1, press Fill in an example, or type at least 3 test results for one ear in Step 2.');
   const j=await api('/api/profile',{...hearingBody(),first_name:$('#first-name').value,lipreading:$('#lip').checked});
   setMeter(j.session);
   const c=j.result.card,a=j.result.analysis;
@@ -1421,9 +1421,19 @@ $('#circle-go').addEventListener('click',()=>guarded($('#circle-go'),$('#circle-
 /* ---------- start ---------- */
 drawCampfire();
 buildGrid();
-// A fresh visit starts empty. Old saves that only held the demo audiogram start empty too.
-if(load()&&state.example&&!state.report){state.right={};state.left={};state.right_bc={};state.left_bc={};state.example=false;$('#device').value='none';$('#device-side').value='';}
-['#first-name','#lip'].forEach(s=>$(s).addEventListener('change',save));
+// A fresh visit starts empty: no numbers, name, device or notes until the person uploads a report,
+// presses Fill in an example, or types their own. Their own data is kept only while this tab is open,
+// and the example is never brought back after a reload. (Older versions saved to localStorage: clear it.)
+try{localStorage.removeItem('hh');}catch(e){}
+// Browsers can refill form fields on reload; put every field back to how the page ships.
+$$('main input, main textarea, main select').forEach(el=>{
+  if(el.type==='file')return;
+  if(el.type==='checkbox'||el.type==='radio')el.checked=el.defaultChecked;
+  else if(el.tagName==='SELECT')[...el.options].forEach(o=>o.selected=o.defaultSelected);
+  else el.value=el.defaultValue;
+});
+load();
+['#first-name','#lip'].forEach(s=>$(s).addEventListener('change',save));$('#first-name').addEventListener('input',save);
 $('#my-notes').addEventListener('input',()=>{save();updateProfileBanners();});
 if(state.report){renderReport(state.report,(state.report.files||[]).map(n=>({name:n,note:'read earlier'})),[],null);}
 ['#device','#device-side'].forEach(s=>$(s).addEventListener('change',()=>{save();refreshAnalysis();}));
