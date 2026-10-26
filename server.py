@@ -177,7 +177,7 @@ def h_circle(body, client):
     people = tools.parse_people(lines)
     shape = body.get("shape") if body.get("shape") in tools.SHAPES else "round"
     noise = [x for x in (body.get("noise") or []) if x in tools.NOISES] if isinstance(body.get("noise"), list) else []
-    tone = body.get("tone") if body.get("tone") in ("casual", "warm", "professional") else "warm"
+    tone = body.get("tone") if body.get("tone") in ("casual", "warm", "professional") else "auto"
     analysis, _ = profile_context(body)
     obj, trace, usage = agents.circle_plan(event, shape, people, noise, tone, analysis,
                                            bool(body.get("lipreading")), report_notes_from(body), BUDGET)

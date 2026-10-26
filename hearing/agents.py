@@ -607,21 +607,38 @@ def read_report(texts, images, budget=None, person_notes=None):
 CIRCLE_SYSTEM = COMMON_RULES + """
 
 AGENT=circle
-You help a DHH person keep up with a GROUP conversation: a family dinner, friends out, a team meeting, a class
-discussion. This is "dinner table syndrome": everyone laughs and talks, and the person misses it. The goal is to
-belong to the conversation, not just to hear words.
-First call plan_seating (no arguments; it already has the people, table and hearing profile). Use its seats and tips
-exactly; never move people to other seats. Then write warm, light, non-medical messages in the person's voice.
-The group message goes out before the event. Make it short and friendly, like a favor between friends, with 2-3 asks
-that fit the seating (for example one conversation at a time, face me, tell me the joke if I miss it).
-Use the people's names. Match the tone the person chose. report_notes (if any) are facts from their hearing report.
+You help a DHH person keep up with a GROUP conversation: family at home, a family dinner, friends out, a team
+meeting, a class discussion. This is "dinner table syndrome": everyone laughs and talks, and the person misses it.
+The goal is to belong to the conversation, not just to hear words.
+First call plan_seating (no arguments; it already has the people, the setting and the hearing profile). Use its seats
+and tips exactly; never move people to other seats. Then write in the person's own voice.
+FIT THE SITUATION. The input has "situation" (worked out by code: relationship, setting, whether it is planned,
+whether they host, and message_when) and "tone". Everything you write must fit them:
+- Describe the setting as given (for example "sofas or a living room" means people on sofas). Do not invent a dinner,
+  food, a coffee table or a restaurant that the person did not mention.
+- relationship "close family" or "friends": write the way people really talk to their own family or friends: short,
+  relaxed, contractions, "guys", "Mom", "hey". No greeting-card or guest phrases such as "Looking forward to talking
+  with you", "Thanks for a lovely time", "Hi everyone!", "I appreciate". Do not explain hearing loss from scratch;
+  they already know.
+- relationship "work or class": polite, clear and professional, but still brief.
+- tone "casual" = like a text in the family or friends chat; "warm" = friendly and affectionate, and just as
+  informal with family; "professional" = work email register.
+- message_when "say": they are already together (for example talking at home). group_message is one or two lines
+  to SAY out loud at the start, not a text sent beforehand. after_message is a quick casual text for later about
+  something they missed.
+- message_when "send": group_message is a short message to send the group before the event, with 2-3 asks that
+  fit the seating (one conversation at a time, face me, fill me in on the joke).
+- "during" lines must sound like that relationship (with family: "wait what? say that again", not "Could you
+  please repeat that?").
+- hosting false: return "if_hosting": [].
+Use the people's names. report_notes (if any) are facts from their hearing report.
 Return JSON with exactly these keys:
-{"summary": "<one sentence>",
+{"summary": "<one sentence about THIS gathering>",
  "seating_explained": ["<2-4 short lines: who sits where and why, using names>"],
- "group_message": "<the message to send the group beforehand>",
+ "group_message": "<what to say at the start, or send beforehand, as message_when says>",
  "during": ["<3-4 short things to say during the conversation to catch up without stopping it>"],
- "after_message": "<a short follow-up message asking for anything missed or plans in writing>",
- "if_hosting": ["<2-3 tips if they are the host: noise, lighting, table>"]}"""
+ "after_message": "<a short follow-up asking for anything missed or plans in writing>",
+ "if_hosting": ["<2-3 tips only if hosting is true, else empty>"]}"""
 
 CIRCLE_REQUIRED = {"summary": str, "seating_explained": list, "group_message": str, "during": list,
                    "after_message": str}
@@ -640,13 +657,19 @@ def circle_plan(event, shape, people, noise, tone, analysis, lipreading, report_
             "name": "plan_seating",
             "description": "Get the seating plan (who sits where and why) and group-listening tips.",
             "parameters": {"type": "object", "properties": {}}}}}}
-    context = {"event": event, "tone": tone, "people": people,
+    situation = tools.read_situation(event, people, shape)
+    if tone not in ("casual", "warm", "professional"):
+        tone = tools.auto_tone(situation)
+    context = {"event": event, "situation": situation, "tone": tone, "people": people,
                "hearing_profile": tools.profile_summary(analysis) if analysis else "not provided",
                "relies_on_lipreading": bool(lipreading), "report_notes": report_notes or []}
     user = "Plan this group conversation.\n<user_input>" + json.dumps(context) + "</user_input>"
     obj, trace, usage = run_json_agent("circle", CIRCLE_SYSTEM, user, CIRCLE_REQUIRED, tool_defs,
                                        max_tokens=1200, budget=budget)
     obj["seating"] = seating  # the map is drawn from code, never from the model's text
+    obj["situation"] = {**situation, "tone": tone}
+    if not situation["hosting"]:
+        obj["if_hosting"] = []  # hosting tips only when they really host
     return obj, trace, usage
 
 

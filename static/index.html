@@ -649,7 +649,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
             </div>
           </fieldset>
           <label class="field" for="circle-tone">Tone of the message</label>
-          <select id="circle-tone"><option value="warm" selected>Warm</option><option value="casual">Casual</option><option value="professional">Professional</option></select>
+          <select id="circle-tone"><option value="auto" selected>Match the situation</option><option value="warm">Warm</option><option value="casual">Casual</option><option value="professional">Professional</option></select>
         </div>
       </div>
       <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
@@ -1374,7 +1374,7 @@ function seatMap(seating){
   const sh=seating.shape;
   if(sh==='long')g+=`<rect x="${X(.36)}" y="${Y(.06)}" width="${X(.64)-X(.36)}" height="${Y(.84)-Y(.06)}" rx="18" fill="#F3EFFE" stroke="#D0C7EC" stroke-width="2"/>`;
   else if(sh==='campfire')g+=`<circle cx="${X(.5)}" cy="${Y(.5)}" r="38" fill="#FFF1DC"/><path d="M${X(.5)} ${Y(.5)+16} c-16 -4 -12 -26 0 -44 c12 18 16 40 0 44z" fill="#FF7A59"/>`;
-  else if(sh==='sofa')g+=`<rect x="${X(.25)}" y="${Y(.3)}" width="${X(.75)-X(.25)}" height="${Y(.7)-Y(.3)}" rx="14" fill="#F3EFFE" stroke="#D0C7EC" stroke-width="2"/><text x="${X(.5)}" y="${Y(.5)+5}" text-anchor="middle" font-size="13" fill="#5A5378">coffee table</text>`;
+  else if(sh==='sofa')g+=`<rect x="${X(.25)}" y="${Y(.3)}" width="${X(.75)-X(.25)}" height="${Y(.7)-Y(.3)}" rx="14" fill="#F3EFFE" stroke="#D0C7EC" stroke-width="2"/><text x="${X(.5)}" y="${Y(.5)+5}" text-anchor="middle" font-size="13" fill="#5A5378">living room</text>`;
   else g+=`<circle cx="${X(.5)}" cy="${Y(.5)}" r="${(W-60)*.26}" fill="#F3EFFE" stroke="#D0C7EC" stroke-width="2"/>`;
   const you=seating.seats.find(s=>s.you);
   if(seating.noise_behind_you&&seating.noise_behind_you.length)
@@ -1399,21 +1399,21 @@ function seatMap(seating){
 $('#circle-sample').addEventListener('click',()=>{
   $('#circle-event').value='Sunday dinner with my family';
   $('#circle-people').value='Mom - soft voice\nDad - talks most\nCousin Raj - fast talker\nAunt Meena - loud\nPriya';
-  $('#circle-shape').value='round';$('#circle-tone').value='warm';
+  $('#circle-shape').value='round';$('#circle-tone').value='auto';
   $$('input[name=noise]').forEach(c=>c.checked=['tv','kitchen'].includes(c.value));
 });
 $('#circle-go').addEventListener('click',()=>guarded($('#circle-go'),$('#circle-out'),async()=>{
   const j=await api('/api/circle',{event:$('#circle-event').value,people:$('#circle-people').value,shape:$('#circle-shape').value,
     noise:$$('input[name=noise]:checked').map(c=>c.value),tone:$('#circle-tone').value,lipreading:$('#lip').checked,...tabHearing()});
   setMeter(j.session);markDone('circle');
-  const r=j.result,seat=r.seating;
+  const r=j.result,seat=r.seating,say=r.situation&&r.situation.message_when==='say';
   $('#circle-out').innerHTML=`<div class="panel big">
     <h2>${esc(r.summary)}</h2>
     <section class="key"><h3>Your seat</h3>${seatMap(seat)}${list(r.seating_explained)}</section>
     <section><h3>Why these seats</h3>${list(seat.tips)}<p class="field-hint">Seats are worked out by code from your hearing side and the notes you added. The AI does not move people.</p></section>
-    <section><h3>Send the group beforehand</h3><pre class="draft">${esc(txt(r.group_message))}</pre>${copyBtn(txt(r.group_message))}</section>
+    <section><h3>${say?'Say this at the start':'Send the group beforehand'}</h3><pre class="draft">${esc(txt(r.group_message))}</pre>${copyBtn(txt(r.group_message))}</section>
     <section><h3>During the conversation</h3>${list(r.during)}</section>
-    <section><h3>Afterwards</h3><pre class="draft">${esc(txt(r.after_message))}</pre>${copyBtn(txt(r.after_message))}</section>
+    <section><h3>${say?'Later, if you missed something':'Afterwards'}</h3><pre class="draft">${esc(txt(r.after_message))}</pre>${copyBtn(txt(r.after_message))}</section>
     ${r.if_hosting&&r.if_hosting.length?`<section><h3>If you are hosting</h3>${list(r.if_hosting)}</section>`:''}
     ${runDetails(j.run)}</div>`;
 }));

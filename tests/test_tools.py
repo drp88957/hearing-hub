@@ -191,6 +191,27 @@ class CircleTests(unittest.TestCase):
         self.assertEqual(many["people"], tools.MAX_PEOPLE)
 
 
+class SituationTests(unittest.TestCase):
+    def sit(self, event, people):
+        return tools.read_situation(event, tools.parse_people(people), "sofa")
+
+    def test_family_at_home_is_casual_and_said_out_loud(self):
+        s = self.sit("Talking to my family", ["Mom - soft voice", "Dad - talks most"])
+        self.assertEqual((s["relationship"], s["message_when"], s["hosting"]), ("close family", "say", False))
+        self.assertEqual(tools.auto_tone(s), "casual")
+
+    def test_planned_family_dinner_is_sent_beforehand(self):
+        self.assertEqual(self.sit("Sunday dinner with my family", ["Mom"])["message_when"], "send")
+
+    def test_work_is_professional(self):
+        s = self.sit("Team meeting on Monday", ["Ana", "Ben"])
+        self.assertEqual((s["relationship"], tools.auto_tone(s)), ("work or class", "professional"))
+
+    def test_hosting_only_when_said(self):
+        self.assertTrue(self.sit("Hosting Diwali at my place", ["Mom"])["hosting"])
+        self.assertFalse(self.sit("Dinner at a restaurant", ["Mom"])["hosting"])
+
+
 class ScoreMentionTests(unittest.TestCase):
     """Found in a live run: the model wrote the pre-guard score into its text, which went stale."""
 

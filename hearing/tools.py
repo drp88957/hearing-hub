@@ -324,6 +324,55 @@ def parse_people(lines):
     return people
 
 
+# Who the people are and what kind of gathering it is, read from the words (no AI), so the
+# messages can match: a text to the family chat is nothing like a note to a work team.
+FAMILY_WORDS = ("family", "mom", "mum", "mother", "dad", "father", "papa", "mummy", "mama", "brother", "sister",
+                "bro", "sis", "cousin", "aunt", "uncle", "grandma", "grandpa", "granny", "nani", "nana", "dadi",
+                "dada", "wife", "husband", "son", "daughter", "kids", "parents", "in-laws", "niece", "nephew")
+FRIEND_WORDS = ("friend", "friends", "buddy", "buddies", "roommate", "flatmate", "classmates", "gang", "squad")
+WORK_WORDS = ("team", "meeting", "work", "office", "boss", "manager", "coworker", "co-worker", "colleague",
+              "client", "interview", "seminar", "professor", "class", "lecture", "conference", "panel", "standup",
+              "stand-up", "board", "investor", "recruiter")
+PLANNED_WORDS = ("dinner", "lunch", "breakfast", "brunch", "party", "birthday", "wedding", "reunion", "trip",
+                 "tonight", "tomorrow", "weekend", "sunday", "saturday", "friday", "holiday", "diwali",
+                 "christmas", "thanksgiving", "eid", "festival", "celebration", "bbq", "barbecue", "picnic",
+                 "night out", "game night", "restaurant", "meeting", "seminar", "interview", "conference")
+HOST_WORDS = ("hosting", "i host", "i'm hosting", "my place", "my house", "my home", "my apartment", "my flat",
+              "at mine", "my party", "i'm throwing", "i am throwing")
+
+
+def _has(text, words):
+    return any(re.search(r"(?<![a-z])" + re.escape(w) + r"(?![a-z])", text) for w in words)
+
+
+def read_situation(event, people, shape=None):
+    """Relationship, timing and hosting for a gathering, from plain keywords. Deterministic."""
+    text = " ".join([event or ""] + [f"{p.get('name', '')} {p.get('note', '')}" for p in people or []]).lower()
+    fam, fr, work = _has(text, FAMILY_WORDS), _has(text, FRIEND_WORDS), _has(text, WORK_WORDS)
+    if work and not (fam or fr):
+        rel = "work or class"
+    elif fam and not work:
+        rel = "close family"
+    elif fr and not work:
+        rel = "friends"
+    elif work:
+        rel = "mixed: work and personal"
+    else:
+        rel = "not clear"
+    ev = (event or "").lower()
+    planned, hosting = _has(ev, PLANNED_WORDS), _has(ev, HOST_WORDS)
+    # already together with family or friends (talking at home, hanging out): say it, nothing to send beforehand
+    when = "say" if rel in ("close family", "friends") and not planned else "send"
+    return {"relationship": rel, "planned": planned, "hosting": hosting, "message_when": when,
+            "setting": {"sofa": "sofas or a living room", "campfire": "outdoors or around a fire",
+                        "long": "a long table", "round": "a round table"}.get(shape, "a table")}
+
+
+def auto_tone(situation):
+    return {"close family": "casual", "friends": "casual",
+            "work or class": "professional"}.get(situation.get("relationship"), "warm")
+
+
 def _seat_points(shape, n):
     """n seats (seat 0 = you). Returns [(x, y)] in a 0-1 box; you sit at the bottom, facing up."""
     if shape in ("long",):
