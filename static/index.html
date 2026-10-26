@@ -1019,7 +1019,7 @@ function renderReport(rep,files,warnings,run){
   const warn=(warnings||[]).map(w=>`<div class="banner shield"><b>Safety filter:</b> ${esc(w.message)}</div>`).join('');
   const facts=(state.report.facts||[]).map((f,i)=>`<li><span>${esc(f)}</span><button type="button" class="x" data-fact="${i}" aria-label="Remove this note">×</button></li>`).join('');
   const ex=state.report&&state.report.example?`<div class="banner example"><b>Example:</b> this is the real hearing report of Deep, who built Hearing Hub. Name, photo and ID numbers are cropped out.</div>
-    <figure class="example-fig"><img src="/static/examples/example-audiogram.jpg" alt="Deep's 2015 audiogram: air-conduction marks around 60-70 dB in both ears, bone-conduction marks near 0-20 dB, and the handwritten diagnosis 'B/L moderate conductive hearing loss'"><figcaption>Deep's audiogram, 30 April 2015. O = right ear, X = left ear, &lt; &gt; = bone conduction. Handwritten: “B/L moderate conductive hearing loss.”</figcaption></figure>`:'';
+    <figure class="example-fig"><img src="/static/examples/example-audiogram.jpg" alt="Deep's 2015 audiogram: air-conduction marks around 60-70 dB in both ears, and bone-conduction marks near 0-20 dB"><figcaption>Deep's audiogram, 30 April 2015. O = right ear, X = left ear, &lt; &gt; = bone conduction.</figcaption></figure>`:'';
   $('#report-out').innerHTML=`<div class="result">${warn}${ex}
     <section class="key"><h3>What I found</h3>
       <div class="found">${got.map(([l,c])=>`<span class="${c?'':'no'}">${l}: ${c?c+' value'+(c>1?'s':''):'not found'}</span>`).join('')}
