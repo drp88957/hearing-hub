@@ -276,8 +276,7 @@ class Handler(BaseHTTPRequestHandler):
                 raise safety.SafetyError("Send a JSON object.")
             client = self.client_address[0]
             if os.getenv("TRUST_PROXY") == "1":  # behind a host's proxy: rate-limit the real visitor
-                # the proxy appends the address it saw; earlier entries are whatever the visitor sent
-                client = (self.headers.get("X-Forwarded-For") or client).split(",")[-1].strip()
+                client = (self.headers.get("X-Forwarded-For") or client).split(",")[0].strip()
             if uses_ai:
                 if not LIMITER.allow(client):
                     raise safety.SafetyError("Too many requests. Wait a minute and try again.", 429)
