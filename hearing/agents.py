@@ -10,6 +10,7 @@ Design notes (also written up in the project report):
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 import re
 import time
 
@@ -698,8 +699,10 @@ def circle_plan(event, shape, people, noise, tone, analysis, lipreading, report_
 def log_run(module, ok, usage, trace, ms, flags=0, error=None):
     """Append a privacy-safe line (no user text) to logs/runs.jsonl."""
     try:
-        path = llm.ROOT / "logs" / "runs.jsonl"
+        path = Path(os.getenv("HUB_RUN_LOG") or llm.ROOT / "logs" / "runs.jsonl")  # tests use a temp file
         path.parent.mkdir(exist_ok=True)
+        if path.exists() and path.stat().st_size > 5_000_000:  # keep one older file, never grow forever
+            path.replace(path.with_suffix(".old.jsonl"))
         rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "module": module, "ok": ok,
                "model": llm.model_label(), "ms": ms, "injection_flags": flags,
                "tools": [t.get("tool") for t in trace if t.get("tool")],

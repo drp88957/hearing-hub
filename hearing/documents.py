@@ -24,6 +24,7 @@ MAX_PDF_PAGES = 8         # pages read for text
 RENDER_PDF_PAGES = 3      # pages turned into images (audiograms are charts)
 IMG_MAX_SIDE = 2000  # audiogram symbols need detail
 ZIP_MAX_UNCOMPRESSED = 40 * 1024 * 1024  # zip-bomb guard for DOCX/PPTX
+MAX_PIXELS = 40_000_000  # a small file can still decode to gigabytes (pictures inside DOCX/PPTX are not shrunk)
 
 EXTENSIONS = {
     "png": "image", "jpg": "image", "jpeg": "image", "webp": "image", "gif": "image",
@@ -107,9 +108,32 @@ def _exif_rotation(raw):
     return 0
 
 
+def _pixels(raw):
+    """Width x height from the image header without decoding it, or None if unknown."""
+    try:
+        if raw.startswith(b"\x89PNG"):
+            return int.from_bytes(raw[16:20], "big") * int.from_bytes(raw[20:24], "big")
+        if raw[:4] == b"GIF8":
+            return int.from_bytes(raw[6:8], "little") * int.from_bytes(raw[8:10], "little")
+        if raw[:4] == b"RIFF" and raw[12:16] == b"VP8X":
+            return (int.from_bytes(raw[24:27], "little") + 1) * (int.from_bytes(raw[27:30], "little") + 1)
+        if raw.startswith(b"\xff\xd8"):
+            i = 2
+            while i + 9 < len(raw) and raw[i] == 0xFF:
+                marker, size = raw[i + 1], int.from_bytes(raw[i + 2:i + 4], "big")
+                if 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCC):  # start of frame
+                    return int.from_bytes(raw[i + 5:i + 7], "big") * int.from_bytes(raw[i + 7:i + 9], "big")
+                i += 2 + size
+    except (IndexError, ValueError):
+        pass
+    return None
+
+
 def _image_url(raw):
     """Return an upright JPEG data URL no larger than IMG_MAX_SIDE on its long side, or None."""
     kind = _sniff(raw)
+    if (_pixels(raw) or 0) > MAX_PIXELS:
+        raise DocumentError("a picture is too large (over 40 megapixels). Take a smaller photo or screenshot.")
     if pymupdf is not None:
         try:
             pix = pymupdf.Pixmap(raw)
@@ -257,6 +281,8 @@ def read_files(items):
                 file_text, file_images, note = raw.decode("utf-8", "replace"), [], "text"
         except DocumentError as e:
             raise DocumentError(f"{name}: {e}")
+        except Exception:  # damaged pages, unusual zip compression: say so instead of a server error
+            raise DocumentError(f"{name}: the file could not be read. Try saving it as PDF or a photo.")
         file_text = re.sub(r"\n{3,}", "\n\n", file_text).strip()
         if file_text:
             texts.append({"name": name, "text": file_text})

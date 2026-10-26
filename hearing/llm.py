@@ -1,6 +1,7 @@
 """Client for an OpenAI-style chat completions API (OpenAI Python SDK, via Portkey)."""
 import os
 import re
+import sys
 import time
 from pathlib import Path
 
@@ -104,6 +105,16 @@ class Usage:
                 "llm_calls": self.calls, "cost_usd": self.cost()}
 
 
+def plain_status(code):
+    if code in (401, 403):
+        return "The AI service did not accept the API key. Check PORTKEY_API_KEY in .env."
+    if code == 429:
+        return "The AI service is busy or out of credit right now. Wait a minute and try again."
+    if code and code >= 500:
+        return f"The AI service is having trouble ({code}). Try again in a minute."
+    return f"The AI service could not handle this request ({code}). Try shorter or simpler text."
+
+
 def chat(messages, tools=None, max_tokens=800, temperature=0.3, timeout=60):
     """One chat completion via the OpenAI SDK. Returns (assistant_message_dict, usage_dict)."""
     base, headers, model, label = provider()
@@ -124,8 +135,9 @@ def chat(messages, tools=None, max_tokens=800, temperature=0.3, timeout=60):
     try:
         resp = client.chat.completions.create(**body)
     except openai.APIStatusError as e:
-        detail = str(getattr(e, "body", "") or e.message)[:300]
-        raise LLMError(f"The AI service returned an error ({e.status_code}). {detail}", status=e.status_code)
+        # the provider's own wording goes to the server log; the person gets a plain sentence
+        print("AI service error:", e.status_code, str(getattr(e, "body", "") or e.message)[:300], file=sys.stderr)
+        raise LLMError(plain_status(e.status_code), status=e.status_code)
     except (openai.APIConnectionError, openai.APITimeoutError) as e:
         raise LLMError(f"Could not reach the AI service: {e}", status=502)
     try:

@@ -6,6 +6,8 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 os.environ["LLM_BASE_URL"] = "http://127.0.0.1:8799"
 os.environ["HUB_REQ_PER_MIN"] = "1000"
 os.environ["HUB_TOKEN_BUDGET"] = "100000"
+import tempfile  # noqa: E402
+os.environ["HUB_RUN_LOG"] = os.path.join(tempfile.mkdtemp(), "runs.jsonl")  # keep test runs out of the real log
 import fake_llm
 import server
 

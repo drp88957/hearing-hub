@@ -107,7 +107,7 @@ Design choices worth knowing:
 python -m unittest discover -s tests -t .
 ```
 
-79 tests cover the audiogram math (including loss type), scoring, seating, report reading in every file
+91 tests cover the audiogram math (including loss type), scoring, seating, report reading in every file
 format, contact and news verification, injection defenses, budget and rate limits, and end-to-end runs of the real
 server against a **fake model** (`tests/fake_llm.py`) that deliberately misbehaves (misread reports, invented
 emails, hidden instructions) to prove the guards catch it.

@@ -240,5 +240,23 @@ class ScoreMentionTests(unittest.TestCase):
         self.assertEqual(SCORE_MENTION.sub("", "Sit facing the wall."), "Sit facing the wall.")
 
 
+
+class PartialEarTests(unittest.TestCase):
+    FULL = {250: 20, 500: 30, 1000: 40, 2000: 50, 4000: 60, 8000: 70}
+    NO_AVERAGE = {250: 20, 500: 30, 8000: 70}  # 3 values but only one of 500/1k/2k/4k
+
+    def test_ear_without_an_average_is_left_out(self):
+        a = tools.analyze_audiogram(self.NO_AVERAGE, self.FULL)
+        self.assertEqual(list(a["ears"]), ["left"])
+        self.assertNotIn("None", tools.profile_summary(a))
+
+    def test_only_ear_without_an_average_is_an_input_error(self):
+        with self.assertRaises(tools.AudiogramError):
+            tools.analyze_audiogram(self.NO_AVERAGE)
+
+    def test_odd_types_do_not_crash(self):
+        self.assertEqual(tools.clean_device(["x"], {"y": 1}), ("none", None))
+        self.assertEqual(tools.clean_report_ear({"1e400": 50})[0], {})
+
 if __name__ == "__main__":
     unittest.main()

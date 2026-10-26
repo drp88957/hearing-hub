@@ -23,15 +23,17 @@ INJECTION_PATTERNS = [
     r"(reveal|show|print|repeat|output|leak|tell me) (me )?(your|the) (system |hidden |initial |secret )?(prompt|instructions)",
     r"system prompt",
     r"you are now\b",
-    r"developer mode|jailbreak|\bDAN\b",
+    r"developer mode|jailbreak",
     r"act as (an? )?(unrestricted|different|new|evil)",
     r"override (your|the) (rules|instructions|safety|guidelines)",
     r"new instructions?\s*:",
     r"api[ _-]?key|portkey|\.env\b|secret key",
     r"</?\s*(system|assistant|untrusted_reviews|user_input|tool)\b",
-    r"(always|must|should) (recommend|rate|score|say)[^.\n]{0,40}(10|perfect|best|safe)",
+    r"(always|must) (recommend|rate|score)[^.\n]{0,40}(10|perfect|best|safe)",
+    r"(rate|score) (it|this|the place)[^.\n]{0,20}\b10\b",
 ]
-_COMPILED = [re.compile(p, re.IGNORECASE) for p in INJECTION_PATTERNS]
+# "DAN" (the jailbreak persona) only in capitals, so a person called Dan is not refused
+_COMPILED = [re.compile(p, re.IGNORECASE) for p in INJECTION_PATTERNS] + [re.compile(r"\bDAN\b")]
 _ZERO_WIDTH = dict.fromkeys(map(ord, "\u200b\u200c\u200d\u2060\ufeff"), None)
 
 
@@ -127,6 +129,8 @@ class RateLimiter:
     def allow(self, key):
         now = time.time()
         with self._lock:
+            if len(self._hits) > 5000:  # forget visitors with no hits in the last minute
+                self._hits = {k: v for k, v in self._hits.items() if v and now - v[-1] < 60}
             hits = [t for t in self._hits.get(key, []) if now - t < 60]
             if len(hits) >= self.per_minute:
                 self._hits[key] = hits
@@ -180,13 +184,21 @@ _PII = [
 
 _DATE = re.compile(r"\d{1,4}[-/.]\d{1,2}[-/.]\d{2,4}")
 _DB_RANGE = re.compile(r"\d{1,3}\s*-\s*\d{1,3}")
+_HZ = {125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000}
+
+
+def _hearing_numbers(t):
+    """True for runs like '60 65 65 70' (dB in steps of 5) or '250-8000' (test frequencies)."""
+    nums = re.findall(r"\d+", t)
+    return all(int(n) in _HZ or (len(n) <= 3 and int(n) % 5 == 0 and int(n) <= 120) for n in nums)
 
 
 def strip_pii(text):
     def sub(m):
         t = m.group(0).strip()
-        # keep dates (30-04-2015) and dB ranges (60-70); remove ID and phone numbers
-        return m.group(0) if _DATE.fullmatch(t) or _DB_RANGE.fullmatch(t) else "[removed]"
+        # keep dates (30-04-2015), dB values and test frequencies; remove ID and phone numbers
+        keep = _DATE.fullmatch(t) or _DB_RANGE.fullmatch(t) or _hearing_numbers(t)
+        return m.group(0) if keep else "[removed]"
     for p in _PII:
         text = p.sub(sub, text)
     return text

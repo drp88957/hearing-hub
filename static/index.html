@@ -13,7 +13,7 @@
   --night:#100B2B; --night-2:#1D1450; --ground:#F6F4FC; --panel:#FFFFFF;
   --ink:#1E1550; --ink-2:#5A5378; --line:#DCD5F0;
   --violet:#5B3FD9; --violet-2:#4A2FC4; --aqua:#2EE6C8; --coral:#FF7A59; --amber:#FFB547;
-  --right:#C23A2E; --left:#1F55D0; --clear:#0E7A63; --faint:#B26A00; --missed:#6B7686;
+  --right:#C23A2E; --left:#1F55D0; --clear:#0E7A63; --faint:#8A5200; --missed:#525C6B;
   --danger:#B42318; --focus:#5B3FD9;
   --wave:linear-gradient(90deg,var(--aqua),#8B5CF6 50%,var(--coral));
   --font:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
@@ -21,7 +21,7 @@
   --shadow:0 1px 2px rgba(30,21,80,.06),0 10px 30px -12px rgba(76,52,190,.22);
 }
 *{box-sizing:border-box}
-html{font-size:18px}
+html{font-size:112.5%}
 body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--font);line-height:1.5}
 h1,h2,h3,h4,p{margin:0}
 a{color:var(--violet)}
@@ -117,7 +117,7 @@ table.grid tr.bone input{border-style:dashed}
 .device-row{display:grid;grid-template-columns:2fr 1fr;gap:.5rem}
 .summary{background:linear-gradient(180deg,#FBFAFF,#F4F1FD);border:1px solid var(--line);border-radius:14px;padding:.75rem .9rem;margin:.2rem 0 .4rem}
 .summary:empty{display:none}
-#summary-notes .notes{margin:.2rem 0 0;padding-left:1.1rem;display:grid;gap:.3rem 2rem;grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+#summary-notes .notes{margin:.2rem 0 0;padding-left:1.1rem;display:grid;gap:.3rem 2rem;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr))}
 #summary-notes h3{margin-bottom:.3rem}
 .checks label{display:flex;gap:.6rem;align-items:flex-start;margin:.5rem 0 .9rem}
 .checks input{margin-top:.3rem;width:1.1rem;height:1.1rem;accent-color:var(--violet)}
@@ -213,7 +213,7 @@ details.run td,details.run th{padding:.15rem .8rem .15rem 0;text-align:left}
 #you-fig.joined .glow{opacity:1}
 
 /* ---------- news ---------- */
-.news-grid{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));align-items:stretch;margin-top:1rem}
+.news-grid{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fill,minmax(min(310px,100%),1fr));align-items:stretch;margin-top:1rem}
 .news-card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;transition:transform .15s,box-shadow .15s}
 .news-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -14px rgba(76,52,190,.35)}
 .news-art{display:block;width:100%;height:132px;flex:none}
@@ -366,7 +366,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
         </span>
         Hearing Hub
       </div>
-      <div class="meter" id="meter" aria-live="polite">Tokens used this session: 0</div>
+      <div class="meter" id="meter">Tokens used this session: 0</div>
     </div>
     <div class="hero-grid">
       <div>
@@ -417,9 +417,9 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
   <!-- ============================ MY HEARING ============================ -->
   <section id="view-hearing" role="tabpanel" aria-labelledby="tab-hearing">
     <ol class="steps no-print" id="steps" aria-label="Steps on this page">
-      <li data-go="#report-panel"><span class="n">1</span><span><b>Upload</b><small>your hearing report</small></span></li>
-      <li data-go=".cols.hearing"><span class="n">2</span><span><b>Check</b><small>your numbers</small></span></li>
-      <li data-go="#make-card"><span class="n">3</span><span><b>Share</b><small>your card</small></span></li>
+      <li data-go="#report-panel" tabindex="0" role="button"><span class="n">1</span><span><b>Upload</b><small>your hearing report</small></span></li>
+      <li data-go=".cols.hearing" tabindex="0" role="button"><span class="n">2</span><span><b>Check</b><small>your numbers</small></span></li>
+      <li data-go="#make-card" tabindex="0" role="button"><span class="n">3</span><span><b>Share</b><small>your card</small></span></li>
     </ol>
     <div class="panel big upload no-print" id="report-panel">
       <span class="step-tag">Step 1 · Start here</span>
@@ -429,7 +429,7 @@ ul.facts li{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-
         <input type="file" id="report-files" class="sr-only" multiple accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.doc,.docx,.ppt,.pptx,.txt,image/*,application/pdf">
         <svg width="54" height="34" viewBox="0 0 54 34" aria-hidden="true"><defs><linearGradient id="up-g" x1="0" x2="1"><stop offset="0" stop-color="#2EE6C8"/><stop offset=".5" stop-color="#8B5CF6"/><stop offset="1" stop-color="#FF7A59"/></linearGradient></defs><path d="M2 17h6l4-11 6 22 6-16 5 10 4-5h19" fill="none" stroke="url(#up-g)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <b>Drop files here, or click to choose</b>
-        <span class="field-hint">PNG, JPG, WebP, PDF, Word (DOC, DOCX), PowerPoint (PPT, PPTX) or text. Up to 8 files, 10 MB each.</span>
+        <span class="field-hint">PNG, JPG, WebP, PDF, Word (DOC, DOCX), PowerPoint (PPT, PPTX) or text. Up to 8 files, 10 MB each (25 MB in total).</span>
       </label>
       <ul class="filelist" id="filelist" aria-label="Files to read"></ul>
       <label class="field" for="my-notes">Anything else about your hearing? <span class="field-hint">(optional, in your own words)</span></label>
@@ -702,26 +702,39 @@ function load(){try{const d=JSON.parse(sessionStorage.getItem('hh')||'null');if(
 
 /* ---------- api ---------- */
 async function api(path,body){
-  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  let j;try{j=await r.json();}catch(e){j={error:'The server sent a reply the app could not read.'};}
+  const ctl=new AbortController(),stop=setTimeout(()=>ctl.abort(),180000);
+  let r;
+  try{r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ctl.signal});}
+  catch(e){throw new Error(e.name==='AbortError'?'This took longer than 3 minutes, so it was stopped. Please try again.':'Could not reach Hearing Hub. Check your internet connection and try again. If you uploaded big files, try fewer or smaller ones.');}
+  finally{clearTimeout(stop);}
+  let j;try{j=await r.json();}catch(e){j={error:r.status===413?'That upload is too large. Send fewer or smaller files.':'The server sent a reply the app could not read.'};}
   if(!r.ok)throw new Error(j.error||'Request failed.');
+  const u=j.run&&j.run.usage;
+  if(u){mine.total_tokens+=u.total_tokens||0;if(u.cost_usd!=null)mine.cost_usd=(mine.cost_usd||0)+u.cost_usd;}
   return j;
 }
-function setMeter(s){if(!s)return;const left=s.budget_remaining!=null?` · budget left ${num(s.budget_remaining)}`:'';
-  const cost=s.cost_usd!=null?` · about $${s.cost_usd.toFixed(4)}`:'';
-  $('#meter').textContent=`Tokens used this session: ${num(s.total_tokens)}${cost}${left}`;}
+// The server serves everyone, so this visitor's own tokens are added up here from each reply.
+const mine={total_tokens:0,cost_usd:null};
+function setMeter(s){if(!s)return;const left=s.budget_remaining!=null?` · server budget left ${num(s.budget_remaining)}`:'';
+  const cost=mine.cost_usd!=null?` · about $${mine.cost_usd.toFixed(4)}`:'';
+  $('#meter').textContent=`Tokens used this session: ${num(mine.total_tokens)}${cost}${left}`;}
 fetch('/api/config').then(r=>r.json()).then(c=>{setMeter(c.session);if(!c.has_key)$('#ask-note').textContent='No API key found. The chart works, but the AI tools need a key in your .env file.';}).catch(()=>{});
 
 /* ---------- tabs ---------- */
 function setTab(name){
   ['hearing','call','place','circle','news'].forEach(n=>{
     $('#view-'+n).classList.toggle('hidden',n!==name);
-    $('#tab-'+n).setAttribute('aria-selected',String(n===name));
+    $('#tab-'+n).setAttribute('aria-selected',String(n===name));$('#tab-'+n).tabIndex=n===name?0:-1;
   });
   updateProfileBanners();
   if(name==='news')loadNews();
 }
 $$('.nav button').forEach(b=>b.addEventListener('click',()=>setTab(b.id.replace('tab-',''))));
+$('.nav').addEventListener('keydown',e=>{
+  const tabs=$$('.nav button'),i=tabs.indexOf(document.activeElement);if(i<0)return;
+  const k={ArrowRight:i+1,ArrowDown:i+1,ArrowLeft:i-1,ArrowUp:i-1,Home:0,End:tabs.length-1}[e.key];if(k==null)return;
+  e.preventDefault();const t=tabs[(k+tabs.length)%tabs.length];t.focus();t.click();
+});
 
 /* ---------- chart ---------- */
 const W=720,H=440,L=58,T=34,R=104,B=22,GW=W-L-R,GH=H-T-B;
@@ -761,7 +774,7 @@ function drawChart(){
     if(!p.overall){rect=`fill="#fff" stroke="#8795A8" stroke-width="1.5"`;fill='#5A5378';}
     else if(st==='clear'){rect=`fill="#1E1550" stroke="#1E1550" stroke-width="2"`;fill='#fff';}
     else if(st==='faint'){rect=`fill="#fff" stroke="#B26A00" stroke-width="2.5"`;fill='#8A5200';}
-    else{rect=`fill="#F4F6F9" stroke="#6B7686" stroke-width="2" stroke-dasharray="4 3"`;fill='#6B7686';}
+    else{rect=`fill="#F4F6F9" stroke="#6B7686" stroke-width="2" stroke-dasharray="4 3"`;fill='#525C6B';}
     s+=`<g><title>${esc(p.sound)}${p.example?' as in '+esc(p.example):''}${p.overall?': '+esc(p.overall):''}</title><rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="6" ${rect}/><text x="${x}" y="${y+4.5}" font-size="14" font-weight="700" text-anchor="middle" fill="${fill}">${esc(p.sound)}</text></g>`;
   });
 
@@ -848,9 +861,9 @@ function afterEdit(skipInputs){
   drawChart();save();
   clearTimeout(timer);timer=setTimeout(refreshAnalysis,180);
 }
-function enough(ear){return Object.keys(state[ear]).length>=3;}
+function enough(ear){return [500,1000,2000,4000].filter(f=>state[ear][f]!=null).length>=3;}
 async function refreshAnalysis(){
-  if(!enough('right')&&!enough('left')){state.analysis=null;drawChart();renderSummary('Add at least 3 results for one ear to see which speech sounds you are likely to catch.');updateProfileBanners();return;}
+  if(!enough('right')&&!enough('left')){state.analysis=null;drawChart();renderSummary('Add at least 3 of 500, 1k, 2k and 4k Hz for one ear to see which speech sounds you are likely to catch.');updateProfileBanners();return;}
   try{
     const j=await api('/api/analyze',hearingBody());
     state.analysis=j.analysis;drawChart();renderSummary();updateProfileBanners();
@@ -889,7 +902,10 @@ function updateSteps(){
   const p=state.progress||{},done=[!!state.report,hearingSet(),!!p.card];
   $$('#steps li').forEach((li,i)=>{li.classList.toggle('done',done[i]);li.querySelector('.n').textContent=done[i]?'\u2713':String(i+1);});
 }
-$$('#steps li').forEach(li=>li.addEventListener('click',()=>{const t=document.querySelector(li.dataset.go);if(t)t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});}));
+$$('#steps li').forEach(li=>{
+  const go=()=>{const t=document.querySelector(li.dataset.go);if(t)t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});};
+  li.addEventListener('click',go);li.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+});
 function updateProfileBanners(){
   updateCampfire();updateSteps();
   const t=profileText(),r=state.report,set=hearingSet();
@@ -909,7 +925,12 @@ function updateProfileBanners(){
 $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>{setTab(b.dataset.goto);$('#report-panel').scrollIntoView({behavior:'smooth',block:'start'});}));
 
 /* ---------- shared result helpers ---------- */
-function working(el){el.innerHTML='<div class="working" role="status"><i></i><i></i><i></i><i></i><i></i><span class="label">Listening and thinking…</span></div>';}
+function working(el){
+  el.innerHTML='<div class="working" role="status"><i></i><i></i><i></i><i></i><i></i><span class="label">Listening and thinking…</span> <span class="field-hint secs" aria-hidden="true"></span></div>';
+  const t0=Date.now(),secs=el.querySelector('.secs'),tick=setInterval(()=>{
+    if(!secs.isConnected)return clearInterval(tick);
+    const n=Math.round((Date.now()-t0)/1000);secs.textContent=n>=5?`${n} s${n>=30?' (looking things up can take up to a minute)':''}`:'';},1000);
+}
 function showError(el,msg){el.innerHTML=`<div class="err" role="alert"><b>That didn’t work.</b> ${esc(msg)}</div>`;}
 function runDetails(run){
   const u=run.usage;
@@ -928,8 +949,9 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest('.copy');if(!b)return;
   const text=b.dataset.copy;
   try{await navigator.clipboard.writeText(text);}catch(_){const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
-  const old=b.textContent;b.textContent='Copied';setTimeout(()=>b.textContent=old,1500);
+  const old=b.textContent;b.textContent='Copied';say('Copied to the clipboard.');setTimeout(()=>b.textContent=old,1500);
 });
+function say(msg){let r=$('#sr-say');if(!r){r=document.createElement('div');r.id='sr-say';r.setAttribute('role','status');r.style.cssText='position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)';document.body.appendChild(r);}r.textContent='';setTimeout(()=>r.textContent=msg,50);}
 async function guarded(btn,out,fn){
   btn.disabled=true;const label=btn.textContent;btn.textContent='Working…';working(out);
   out.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
@@ -973,7 +995,7 @@ const EXAMPLE_REPORT={
 
 /* ---------- hearing report upload ---------- */
 const UP_EXT=['png','jpg','jpeg','webp','gif','pdf','doc','docx','ppt','pptx','txt'];
-const UP_MAX_FILES=8,UP_MAX_BYTES=10*1024*1024;
+const UP_MAX_FILES=8,UP_MAX_BYTES=10*1024*1024,UP_MAX_DOCS=24*1024*1024;
 let upFiles=[];
 function extOf(n){return (n.split('.').pop()||'').toLowerCase();}
 function renderFileList(){
@@ -986,6 +1008,7 @@ function addFiles(list){
     if(!UP_EXT.includes(extOf(f.name)))problems.push(`${f.name}: use PNG, JPG, WebP, PDF, DOC, DOCX, PPT, PPTX or TXT.`);
     else if(f.size>UP_MAX_BYTES)problems.push(`${f.name}: files must be under 10 MB.`);
     else if(upFiles.length>=UP_MAX_FILES)problems.push(`Only ${UP_MAX_FILES} files at a time.`);
+    else if(!/^(png|jpe?g|webp|gif)$/.test(extOf(f.name))&&upFiles.concat(f).filter(x=>!/^(png|jpe?g|webp|gif)$/.test(extOf(x.name))).reduce((a,x)=>a+x.size,0)>UP_MAX_DOCS)problems.push(`${f.name}: documents together must be under 25 MB.`);
     else if(!upFiles.some(x=>x.name===f.name&&x.size===f.size))upFiles.push(f);
   });
   renderFileList();
@@ -1039,7 +1062,7 @@ $('#report-out').addEventListener('click',e=>{
   state.report.facts.splice(+b.dataset.fact,1);save();updateProfileBanners();
   b.closest('li').remove();$$('#facts [data-fact]').forEach((x,i)=>x.dataset.fact=i);
 });
-$('#read-report').addEventListener('click',()=>guarded($('#read-report'),$('#report-out'),async()=>{
+$('#read-report').addEventListener('click',()=>{$('#report-example').disabled=true;guarded($('#read-report'),$('#report-out'),async()=>{
   const files=await Promise.all(upFiles.map(fileData));
   const j=await api('/api/report',{files,my_notes:$('#my-notes').value});
   setMeter(j.session);
@@ -1055,7 +1078,7 @@ $('#read-report').addEventListener('click',()=>guarded($('#read-report'),$('#rep
   afterEdit();updateProfileBanners();$('#clear-report').classList.remove('hidden');
   upFiles=[];renderFileList();
   renderReport(rep,j.result.files,j.warnings,j.run);
-}));
+}).then(()=>{$('#report-example').disabled=false;renderFileList();});});
 $('#report-example').addEventListener('click',()=>{
   const r=EXAMPLE_REPORT;
   state.right={...r.right_air};state.left={...r.left_air};state.right_bc={...r.right_bone};state.left_bc={...r.left_bone};state.example=false;
@@ -1075,6 +1098,7 @@ function startOver(){
   $('#device').value='none';$('#device-side').value='';
   if(wasExample){if($('#first-name').value==='Deep')$('#first-name').value='';if($('#my-notes').value===EXAMPLE_NOTES)$('#my-notes').value='';}
   upFiles=[];renderFileList();
+  photoData=null;$('#place-photo').value='';$('#photo-prev').classList.add('hidden');
   $('#report-out').innerHTML='';$('#summary').innerHTML='';$('#summary-notes').innerHTML='';
   Object.entries(EMPTY_OUT).forEach(([id,h])=>$('#'+id).innerHTML=h);
   afterEdit();updateProfileBanners();
@@ -1085,7 +1109,7 @@ $('#chart-empty-upload').addEventListener('click',()=>{$('#report-panel').scroll
 
 /* ---------- profile card ---------- */
 $('#make-card').addEventListener('click',()=>guarded($('#make-card'),$('#profile-out'),async()=>{
-  if(!state.analysis)throw new Error('First upload your report in Step 1, press Fill in an example, or type at least 3 test results for one ear in Step 2.');
+  if(!state.analysis)throw new Error('First upload your report in Step 1, press Fill in an example, or type at least 3 of 500, 1k, 2k and 4k Hz for one ear in Step 2.');
   const j=await api('/api/profile',{...hearingBody(),first_name:$('#first-name').value,lipreading:$('#lip').checked});
   setMeter(j.session);
   const c=j.result.card,a=j.result.analysis;
@@ -1393,7 +1417,7 @@ function seatMap(seating){
         <text x="${x}" y="${y+38}" text-anchor="middle" font-size="12.5" fill="#1E1550">${esc(st.name.slice(0,16))}</text>`;
     }
   });
-  return `<svg class="seatmap" viewBox="0 0 ${W} ${H}" role="img" aria-label="Seating map. You sit at the bottom.${seating.seats.filter(s=>!s.you).map(s=>' '+s.name+' in seat '+s.seat+(s.why?' ('+s.why+')':'')).join(',')}">
+  return `<svg class="seatmap" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc('Seating map. You sit at the bottom.'+seating.seats.filter(s=>!s.you).map(s=>' '+s.name+' in seat '+s.seat+(s.why?' ('+s.why+')':'')).join(','))}">
     <defs><linearGradient id="seat-you" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2EE6C8"/><stop offset=".55" stop-color="#8B5CF6"/><stop offset="1" stop-color="#FF7A59"/></linearGradient></defs>${g}</svg>
     <div class="tags"><span><i style="background:${TAG_COLOR.most}"></i>talks most / most want to hear</span><span><i style="background:${TAG_COLOR.quiet}"></i>soft voice</span><span><i style="background:${TAG_COLOR.hard}"></i>harder to understand</span><span><i style="background:${TAG_COLOR.loud}"></i>loud voice</span>${seating.your_hearing_side?'<span><i style="background:#2EE6C8"></i>your hearing side</span>':''}</div>`;
 }

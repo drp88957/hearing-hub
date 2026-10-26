@@ -159,8 +159,8 @@ SIDES = ("right", "left", "both")
 
 
 def clean_device(device, side):
-    device = device if device in DEVICES else "none"
-    side = side if side in SIDES and device != "none" else None
+    device = device if isinstance(device, str) and device in DEVICES else "none"
+    side = side if isinstance(side, str) and side in SIDES and device != "none" else None
     return device, side
 
 
@@ -210,9 +210,10 @@ def analyze_audiogram(right=None, left=None, right_bc=None, left_bc=None, device
     ears = {"right": clean_ear(right), "left": clean_ear(left)}
     bones = {"right": clean_ear(right_bc, BC_FREQS), "left": clean_ear(left_bc, BC_FREQS)}
     device, device_side = clean_device(device, device_side)
-    usable = {n: e for n, e in ears.items() if len(e) >= 3}
+    # an ear counts once it has an average: 3 of 500, 1k, 2k and 4k Hz
+    usable = {n: e for n, e in ears.items() if _pta(e) is not None}
     if not usable:
-        raise AudiogramError("Enter at least 3 frequencies for one ear.")
+        raise AudiogramError("Enter at least 3 of 500, 1k, 2k and 4k Hz for one ear.")
 
     ear_info = {}
     for name, ear in usable.items():
@@ -462,7 +463,7 @@ def clean_report_ear(raw, freqs=FREQS):
     for k, v in raw.items():
         try:
             f, db = int(float(k)), float(v)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             dropped += v not in (None, "")
             continue
         if f not in freqs or not (DB_MIN <= db <= DB_MAX):

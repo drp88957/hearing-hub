@@ -58,9 +58,14 @@ def session_info():
 
 # ------------------------------------------------------------------ handlers
 
+def pick(value, allowed, default=None):
+    """value if it is one of the allowed strings, else default (lists or numbers never crash the check)."""
+    return value if isinstance(value, str) and value in allowed else default
+
+
 def report_notes_from(body):
     """Report facts the browser kept from an earlier upload. Re-cleaned: never trust the client."""
-    notes, _ = safety.clean_notes(body.get("report_notes"), max_items=8, max_len=300)
+    notes, _ = safety.clean_notes(body.get("report_notes"), max_items=12, max_len=300)
     return notes
 
 
@@ -122,9 +127,9 @@ def h_call(body, client):
     t0 = time.time()
     goal = safety.clean_field("What you need to get done", body.get("goal"), 800, required=True)
     name = safety.clean_field("First name", body.get("first_name"), 40)
-    org = body.get("org_type") if body.get("org_type") in tools.ORG_TYPES else "other"
-    urgency = body.get("urgency") if body.get("urgency") in ("today", "this week", "no rush") else "this week"
-    comfort = body.get("comfort") if body.get("comfort") in (
+    org = pick(body.get("org_type"), tools.ORG_TYPES, "other")
+    urgency = pick(body.get("urgency"), ("today", "this week", "no rush"), "this week")
+    comfort = body.get("comfort") if isinstance(body.get("comfort"), str) and body.get("comfort") in (
         "cannot use the phone", "can use a captioned phone or relay", "can talk but struggle to hear") \
         else "can talk but struggle to hear"
     _, line = profile_context(body)
@@ -175,9 +180,9 @@ def h_circle(body, client):
         raise safety.SafetyError(f"Add up to {tools.MAX_PEOPLE} people.")
     lines = [safety.clean_field("A person in the list", ln, 90) for ln in lines]
     people = tools.parse_people(lines)
-    shape = body.get("shape") if body.get("shape") in tools.SHAPES else "round"
-    noise = [x for x in (body.get("noise") or []) if x in tools.NOISES] if isinstance(body.get("noise"), list) else []
-    tone = body.get("tone") if body.get("tone") in ("casual", "warm", "professional") else "auto"
+    shape = pick(body.get("shape"), tools.SHAPES, "round")
+    noise = [x for x in body.get("noise") if pick(x, tools.NOISES)] if isinstance(body.get("noise"), list) else []
+    tone = pick(body.get("tone"), ("casual", "warm", "professional"), "auto")
     analysis, _ = profile_context(body)
     obj, trace, usage = agents.circle_plan(event, shape, people, noise, tone, analysis,
                                            bool(body.get("lipreading")), report_notes_from(body), BUDGET)
@@ -186,7 +191,7 @@ def h_circle(body, client):
 
 def h_news(body, client):
     t0 = time.time()
-    device = body.get("device") if body.get("device") in tools.DEVICES else None
+    device = pick(body.get("device"), tools.DEVICES)
     payload, web_usage = news.search_newer(device, BUDGET)
     usage = llm.Usage()
     if web_usage:
@@ -208,6 +213,7 @@ POST_ROUTES = {"/api/analyze": (h_analyze, False), "/api/route": (h_route, True)
 
 class Handler(BaseHTTPRequestHandler):
     server_version = "HearingHub/0.1"
+    timeout = 60  # a client that stops sending mid-upload is dropped instead of holding a thread
 
     def log_message(self, fmt, *args):
         if os.getenv("HUB_VERBOSE"):
@@ -222,6 +228,16 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         self.wfile.write(data)
+
+    def _discard(self, length):
+        """Read and drop an oversized body (up to 200 MB) so the browser sees our message, not a reset."""
+        self.close_connection = True
+        left = min(length, 200_000_000)
+        while left > 0:
+            chunk = self.rfile.read(min(left, 1 << 20))
+            if not chunk:
+                break
+            left -= len(chunk)
 
     def do_GET(self):
         path = self.path.split("?")[0]
@@ -244,15 +260,24 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(404, {"error": "Not found."})
         handler, uses_ai = route
         try:
-            length = int(self.headers.get("Content-Length", "0"))
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+            except ValueError:
+                length = -1
+            if length < 0:
+                self.close_connection = True
+                raise safety.SafetyError("Could not read that request.", 411)
             if length > (MAX_REPORT_BODY if path == "/api/report" else MAX_BODY):
-                raise safety.SafetyError("That upload is too large.", 413)
+                self._discard(length)
+                raise safety.SafetyError("That upload is too large. Send fewer or smaller files "
+                                         "(up to about 25 MB in total).", 413)
             body = json.loads(self.rfile.read(length) or b"{}")
             if not isinstance(body, dict):
                 raise safety.SafetyError("Send a JSON object.")
             client = self.client_address[0]
             if os.getenv("TRUST_PROXY") == "1":  # behind a host's proxy: rate-limit the real visitor
-                client = (self.headers.get("X-Forwarded-For") or client).split(",")[0].strip()
+                # the proxy appends the address it saw; earlier entries are whatever the visitor sent
+                client = (self.headers.get("X-Forwarded-For") or client).split(",")[-1].strip()
             if uses_ai:
                 if not LIMITER.allow(client):
                     raise safety.SafetyError("Too many requests. Wait a minute and try again.", 429)
@@ -264,7 +289,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send(e.status, {"error": str(e), "kind": "refused"})
         except tools.AudiogramError as e:
             self._send(400, {"error": str(e), "kind": "input"})
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, UnicodeDecodeError):
             self._send(400, {"error": "Could not read that request.", "kind": "input"})
         except llm.LLMError as e:
             agents.log_run(path, False, None, [], 0, error=str(e)[:120])

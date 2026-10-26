@@ -227,6 +227,8 @@ def _load_cache():
 
 
 def _save_cache(cache):
+    now = time.time()  # drop expired entries so the file does not grow forever
+    cache = {k: v for k, v in cache.items() if isinstance(v, dict) and now - v.get("at", 0) < CACHE_DAYS * 86400}
     try:
         CACHE_FILE.parent.mkdir(exist_ok=True)
         CACHE_FILE.write_text(json.dumps(cache, indent=1), encoding="utf-8")
